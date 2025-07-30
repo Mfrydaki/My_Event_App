@@ -25,7 +25,7 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="p-8 rounded-lg shadow-md w-full max-w-md space-y-4 "
       >
-        <h2 className="text-2xl font-bold text-center mb-4 bg-indigo-200 rounded-md">Log in</h2>
+        <h2 className="text-2xl font-bold text-center mb-4 bg-indigo-200 rounded-md">Log in!</h2>
 
         <input
           type="email"

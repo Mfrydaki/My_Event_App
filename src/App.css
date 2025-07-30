@@ -1,14 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,100..900;1,100..900&display=swap');
-
 
 html, body {
   height: 100%;
   margin: 0;
-}
-
-body {
-  font-family: "Saira", sans-serif;
-  color: rgb(123, 97, 97)
+  font-family: "Zen Dots", cursive;
+  color: rgb(123, 97, 97);
 }
 
 h1 {
