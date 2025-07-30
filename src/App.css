@@ -1,3 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,100..900;1,100..900&display=swap');
+
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Saira", sans-serif;
+  color: rgb(123, 97, 97)
+}
+
+h1 {
+  font-size: 3rem;
+  letter-spacing: 1px;
+}
+
+
 .App {
   text-align: center;
 }
@@ -36,3 +55,21 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* App.css */
+.container {
+  position: relative;  /* Σημαντικό για να δουλέψει το απόλυτο positioning */
+  height: 100vh;       /* Ύψος ολόκληρης της σελίδας */
+  background-color: #f0f0f0; /* απλό background για να φαίνεται η σελίδα */
+}
+
+.login-button {
+  position: absolute;  /* Τοποθετούμε το κουμπί απόλυτα μέσα στο container */
+  top: 20px;           /* Απόσταση από πάνω */
+  right: 20px;         /* Απόσταση από δεξιά */
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
