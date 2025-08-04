@@ -1,13 +1,21 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {Events} from "../data/events";
 
-export default function HomePage() {
+ function HomePage() {
+
+    const navigate = useNavigate();
+
+    const handleSignInClick = () => {
+           navigate("/login");
+     };
+
   return (
     <div className="w-screen h-screen bg-indigo-200 flex flex-col items-center p-6 overflow-auto relative">
      
-      <button className="absolute top-6 right-6 px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-blue-700 cursor-pointer">
+      <button onClick= {handleSignInClick} className="absolute top-6 right-6 px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-blue-700 cursor-pointer">
+       
         Sign in
       </button>
 
@@ -38,4 +46,4 @@ export default function HomePage() {
       </ul>
     </div>
   );
-}
+} export default HomePage;

@@ -1,55 +1,59 @@
 import React, { useState } from "react";
+import LoginForm from "../ui/LoginForm";
+import RegistrationForm from "../ui/RegistrationForm";
 import axios from "axios";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function LoginPage() {
+  const [isLogin, setIsLogin] = useState(true);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  // Log in
+  const handleLogin = async ({ email, password }) => {
     try {
-      const response = await axios.post("http://localhost:8000/api/login", {
+      const res = await axios.post("http://localhost:8000/api/login", {
         email,
         password,
       });
-      console.log("Logged in with:", response.data);
-    } catch (error) {
-      console.error("Log in failed", error);
+      console.log("Successful log in:", res.data);
+    } catch (err) {
+      console.error("Log in failed", err);
+    }
+  };
+
+  // Register
+  const handleRegister = async ({ email, password }) => {
+    try {
+      const res = await axios.post("http://localhost:8000/api/register", {
+        email,
+        password,
+      });
+      console.log("Welcome", res.data);
+      setIsLogin(true); // after registration go to log in
+    } catch (err) {
+      console.log("Registration failed", err);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-950 to-indigo-300 animate-gradient">
-      <form
-        onSubmit={handleSubmit}
-        className="p-8 rounded-lg shadow-md w-full max-w-md space-y-4 "
-      >
-        <h2 className="text-2xl font-bold text-center mb-4 bg-indigo-200 rounded-md">Log in!</h2>
+      <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+        {isLogin ? (
+          <LoginForm onLogin={handleLogin} />
+        ) : (
+          <RegistrationForm onRegister={handleRegister} />
+        )}
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full border border-slate-800 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-200"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full border border-slate-800 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-200"
-        />
-        <button
-          type="submit"
-          className="w-full bg-purple-500 text-white py-2 rounded-md transition duration-200 hover:bg-purple-600"
-        >
-          Connect
-        </button>
-      </form>
+        <p className="mt-4 text-center text-sm text-gray-600">
+          {isLogin ? "New in AP?" : "Already have an account?"}
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="ml-1 text-indigo-600 font-semibold hover:underline"
+          >
+            {isLogin ? "Sign up" : "Sign in"}
+          </button>
+        </p>
+      </div>
     </div>
   );
 }
+
+export default LoginPage;
