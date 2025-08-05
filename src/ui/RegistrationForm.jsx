@@ -5,7 +5,7 @@ function RegistrationForm({ onRegister }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  function handleSubmit(e) {
+  const handleSubmit =(e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       alert("Wrong Password!");

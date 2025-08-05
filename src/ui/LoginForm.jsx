@@ -3,12 +3,12 @@ import { useState } from "react";
 function LoginForm({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
-  function handleSubmit(e) {
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    onLogin( {email , password}); // send the data to the parent
-    }
-    
+    onLogin({ email, password });
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -34,7 +34,7 @@ function LoginForm({ onLogin }) {
         className="w-full border rounded px-3 py-2"
       />
 
-      <button 
+      <button
         type="submit"
         className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
       >
@@ -43,4 +43,5 @@ function LoginForm({ onLogin }) {
     </form>
   );
 }
-export default LoginForm;   
+
+export default LoginForm;
