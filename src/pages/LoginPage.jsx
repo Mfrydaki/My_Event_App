@@ -2,13 +2,11 @@ import React, { useState } from "react";
 import LoginForm from "../ui/LoginForm";
 import RegistrationForm from "../ui/RegistrationForm";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const navigate = useNavigate();
 
-  // Log in
+  // "Log in"
   const handleLogin = async ({ email, password }) => {
     try {
       const res = await axios.post("http://localhost:8000/api/login", {
@@ -16,22 +14,18 @@ function LoginPage() {
         password,
       });
 
-      const token = res.data.token;
+      // "Save token to localStorage so the user stays logged in"
+      localStorage.setItem("token", res.data.token);
 
-      if (token) {
-        localStorage.setItem("token", token); // Αποθήκευση JWT
-        alert("Επιτυχής σύνδεση!");
-        navigate("/"); // Προώθηση στην αρχική σελίδα
-      } else {
-        alert("Δεν ελήφθη token από τον server");
-      }
+      console.log("Successful log in:", res.data);
+      alert("Successfully logged in!");
     } catch (err) {
-      console.error("Login failed", err);
-      alert("Λάθος email ή κωδικός");
+      console.error("Log in failed", err);
+      alert("Login failed. Please check your credentials.");
     }
   };
 
-  // Register
+  // "Register"
   const handleRegister = async ({ email, password }) => {
     try {
       const res = await axios.post("http://localhost:8000/api/register", {
@@ -40,11 +34,11 @@ function LoginPage() {
       });
 
       console.log("Welcome", res.data);
-      alert("Επιτυχής εγγραφή! Μπορείς τώρα να συνδεθείς.");
-      setIsLogin(true); // μετά την εγγραφή δείχνει φόρμα login
+      alert("Registration successful! You can now log in.");
+      setIsLogin(true); // "After registration, go to login"
     } catch (err) {
       console.log("Registration failed", err);
-      alert("Αποτυχία εγγραφής");
+      alert("Registration failed. Please try again.");
     }
   };
 
