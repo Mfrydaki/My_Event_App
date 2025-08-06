@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import LoginForm from "../ui/LoginForm";
 import RegistrationForm from "../ui/RegistrationForm";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
 
   // Log in
   const handleLogin = async ({ email, password }) => {
@@ -13,9 +15,19 @@ function LoginPage() {
         email,
         password,
       });
-      console.log("Successful log in:", res.data);
+
+      const token = res.data.token;
+
+      if (token) {
+        localStorage.setItem("token", token); // Αποθήκευση JWT
+        alert("Επιτυχής σύνδεση!");
+        navigate("/"); // Προώθηση στην αρχική σελίδα
+      } else {
+        alert("Δεν ελήφθη token από τον server");
+      }
     } catch (err) {
-      console.error("Log in failed", err);
+      console.error("Login failed", err);
+      alert("Λάθος email ή κωδικός");
     }
   };
 
@@ -26,10 +38,13 @@ function LoginPage() {
         email,
         password,
       });
+
       console.log("Welcome", res.data);
-      setIsLogin(true); // after registration go to log in
+      alert("Επιτυχής εγγραφή! Μπορείς τώρα να συνδεθείς.");
+      setIsLogin(true); // μετά την εγγραφή δείχνει φόρμα login
     } catch (err) {
       console.log("Registration failed", err);
+      alert("Αποτυχία εγγραφής");
     }
   };
 
