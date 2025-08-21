@@ -1,18 +1,56 @@
 import { useState } from "react";
 
+/**
+ * RegistrationForm Component
+ *
+ * Purpose
+ * -------
+ * Display a user registration form and submit credentials
+ * (email + password) to the parent component.
+ *
+ * Behavior
+ * --------
+ * - User enters email, password, confirm password.
+ * - On submit:
+ *   * If passwords do not match, show an error message.
+ *   * Otherwise, call the onRegister function passed via props.
+ *
+ * Props
+ * -----
+ * onRegister : Function
+ * Callback function that receives { email, password }.
+ *
+ * State
+ * -----
+ * email : String
+ * User email input.
+ * password : String
+ * User password input.
+ * confirmPassword : String
+ * User confirmation password input.
+ * error : String
+ * Error message for mismatched passwords.
+ *
+ * Returns
+ * -------
+ * JSX.Element
+ *     The registration form.
+ */
 function RegistrationForm({ onRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit =(e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      alert("Wrong Password!");
+      setError("Passwords do not match!");
       return;
     }
+    setError("");
     onRegister({ email, password });
-  }
+  };
 
   return (
     <form
@@ -48,7 +86,9 @@ function RegistrationForm({ onRegister }) {
         className="w-full border rounded px-3 py-2"
       />
 
-      <button 
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+
+      <button
         type="submit"
         className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
       >
@@ -57,4 +97,5 @@ function RegistrationForm({ onRegister }) {
     </form>
   );
 }
+
 export default RegistrationForm;
