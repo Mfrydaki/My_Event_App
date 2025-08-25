@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+// src/pages/EventsPage.jsx
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../services/api";
 
 /**
@@ -19,16 +21,16 @@ import api from "../services/api";
  * State
  * -----
  * events : Array
- * Stores the events returned from the backend.
+ *   Stores the events returned from the backend.
  * loading : Boolean
- * True while events are being loaded.
+ *   True while events are being loaded.
  * error : String
- * Holds an error message if the request fails.
+ *   Holds an error message if the request fails.
  *
  * Returns
  * -------
  * JSX.Element
- * The rendered events list or loading/error messages.
+ *   The rendered events list or loading/error messages.
  */
 function EventsPage() {
   const [events, setEvents] = useState([]);
@@ -48,7 +50,7 @@ function EventsPage() {
       try {
         setError("");
         const res = await api.get("/events/");
-        setEvents(res.data);
+        setEvents(res.data || []);
       } catch (err) {
         setError(
           err?.response?.data?.error ||
@@ -81,10 +83,20 @@ function EventsPage() {
         <ul className="space-y-4">
           {events.map((ev) => (
             <li key={ev.id} className="p-4 border rounded shadow">
-              <h3 className="text-xl font-semibold">{ev.title}</h3>
+              <h3 className="text-xl font-semibold">
+                {/* Make title clickable without changing visual design */}
+                <Link
+                  to={`/events/${ev.id}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  {ev.title}
+                </Link>
+              </h3>
+
               {ev.description && (
                 <p className="text-gray-700">{ev.description}</p>
               )}
+
               <p className="text-sm text-gray-500">{ev.date}</p>
             </li>
           ))}

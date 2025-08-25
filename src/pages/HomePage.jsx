@@ -1,50 +1,65 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import React from "react";
+import { Link } from "react-router-dom";
+import event1Image from "../imgs/event1.jpg";
+import event2Image from "../imgs/event2.jpg";
+import event3Image from "../imgs/event3.jpg";
+import event4Image from "../imgs/event4.jpg";
 
-function HomePage() {
-  const [events, setEvents] = useState([]);
-  const navigate = useNavigate();
+const Events = [
+  {
+    id: 1,
+    title: "Role Model Masterclass 2025 Edition > Course 1: Your Personna",
+    date: "2025-09-09",
+    image: event1Image,
+  },
+  {
+    id: 2,
+    title: "womENcourage™ 2025",
+    date: "2025-09-17",
+    image: event2Image,
+  },
+  {
+    id: 3,
+    title:
+      "Women of Silicon Role Model Masterclass 2025 Edition > Course 2: Your Passion",
+    date: "2025-10-14",
+    image: event3Image,
+  },
+  {
+    id: 4,
+    title: "Women in STEM Awards 2025",
+    date: "2025-10-23",
+    image: event4Image,
+  },
+];
 
-  useEffect(() => {
-    async function fetchEvents() {
-      try {
-        const res = await axios.get("http://localhost:8000/events/");
-        setEvents(res.data);
-      } catch (err) {
-        console.error("Error loading events:", err);
-      }
-    }
-    fetchEvents();
-  }, []);
-
-  const handleSignInClick = () => {
-    navigate("/login");
-  };
-
+export default function HomePage() {
   return (
-    <div className="w-screen h-screen bg-indigo-200 flex flex-col items-center p-6 overflow-auto relative">
-      <button
-        onClick={handleSignInClick}
-        className="absolute top-6 right-6 px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-blue-700 cursor-pointer"
+    <div className="w-screen h-screen bg-gray-100 flex flex-col items-center p-6 overflow-auto relative">
+      {/* Sign in πάνω-δεξιά */}
+      <Link
+        to="/login"
+        className="absolute top-6 right-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
       >
         Sign in
-      </button>
+      </Link>
 
-      <h1 className="text-3xl font-bold mb-6">Upcoming Events</h1>
+      <h1 className="text-3xl font-bold mb-6">Welcome!</h1>
+      <h2 className="text-2xl mb-4">Events</h2>
 
       <ul className="space-y-6 mb-8 w-full max-w-xl">
-        {events.map((event) => (
+        {Events.map((event) => (
           <li
             key={event.id}
-            className="rounded-2xl shadow-md overflow-hidden bg-gray-200 transition-transform hover:scale-105 duration-300"
+            className="rounded-2xl shadow-md overflow-hidden bg-white transition-transform hover:scale-105 duration-300"
           >
+            {/* fix: χρησιμοποιούμε backticks στο template string */}
             <Link to={`/events/${event.id}`} className="block">
               <div className="relative h-64 w-full overflow-hidden">
                 <img
                   src={event.image}
                   alt={"Image for event: " + event.title}
-                  className="w-full h-full object-fill"
+                  className="w-full h-full object-cover"
                 />
               </div>
 
@@ -59,5 +74,3 @@ function HomePage() {
     </div>
   );
 }
-
-export default HomePage;

@@ -30,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 export default function CreateEventPage() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [success, setSuccess] = useState("");
 
   /**
    * handleCreateEvent
@@ -45,9 +46,8 @@ export default function CreateEventPage() {
     try {
       setError("");
       setSuccess("");
-
       await api.post("/events/", eventData);
-      setSuccess("Event created successfully! 🎉 ");
+      setSuccess("Event created successfully! 🎉");
 
       // Event created successfully → redirect
       setTimeout(() => navigate("/events"), 1500);
@@ -64,6 +64,9 @@ export default function CreateEventPage() {
     <div className="p-4 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Host Your Event</h1>
       <EventForm onSubmit={handleCreateEvent} />
+    
+  
+      {success && <p className="text-green-600 text-sm mt-2">{success}</p>}
       {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
     </div>
   );
