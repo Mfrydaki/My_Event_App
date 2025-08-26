@@ -13,27 +13,29 @@ import { useNavigate } from "react-router-dom";
  *
  * Behavior
  * --------
- * - Provides a toggle between login form and registration form.
- * - On login, sends a POST request to /auth/login/ with email & password.
- * If successful:
- * Saves the JWT access token to localStorage (key: "access").
- * Saves the user object to localStorage (key: "user").
-  * Redirects to the /events page.
- * - On registration, sends a POST request to /auth/register/ with email & password.
+ * - Provides a toggle between login and registration forms.
+ * - On login:
+ *   POST /auth/login/ with { email, password }.
  *   If successful:
- * Switches back to the login form.
+ *     - Stores the JWT access token in localStorage with key: "token".
+ *     - Stores the user object in localStorage with key: "user".
+ *     - Redirects the user to the /events page.
+ * - On registration:
+ *   POST /auth/register/ with { email, password }.
+ *   If successful:
+ *     - Switches back to the login form.
  *
  * State
  * -----
  * isLogin : Boolean
- * Determines whether to show the login form or the registration form.
+ *   Determines whether to display the login or registration form.
  * error : String
- * Holds an error message if login or registration fails.
+ *   Holds an error message if login or registration fails.
  *
  * Returns
  * -------
  * JSX.Element
- * The login or registration form with error handling.
+ *   The login or registration form with error handling.
  */
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -43,23 +45,30 @@ function LoginPage() {
   /**
    * handleLogin
    *
-   * Send credentials to the backend to log in the user.
-   * On success, store JWT + user in localStorage and redirect.
+   * Send credentials to the backend for authentication.
+   * If successful, save token + user in localStorage and redirect to /events.
    */
   const handleLogin = async ({ email, password }) => {
     try {
       setError("");
       const res = await api.post("/auth/login/", { email, password });
-      const { access, user } = res.data;
+      const { access, user } = res.data || {};
+
+      if (!access) {
+        throw new Error("No access token returned from server.");
+      }
 
       localStorage.setItem("token", access);
-      localStorage.setItem("user", JSON.stringify(user));
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
 
-      navigate("/profile");
+      navigate("/events");
     } catch (err) {
       setError(
         err?.response?.data?.error ||
           err?.response?.data?.detail ||
+          err?.message ||
           "Login failed. Please check your credentials."
       );
     }
@@ -68,8 +77,8 @@ function LoginPage() {
   /**
    * handleRegister
    *
-   * Send credentials to the backend to register a new user.
-   * On success, switch to login form.
+   * Send credentials to create a new user account.
+   * If successful, switch back to the login form.
    */
   const handleRegister = async ({ email, password }) => {
     try {
