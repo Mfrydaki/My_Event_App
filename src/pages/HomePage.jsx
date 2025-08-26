@@ -1,42 +1,50 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import event1Image from "../imgs/event1.jpg";
-import event2Image from "../imgs/event2.jpg";
-import event3Image from "../imgs/event3.jpg";
-import event4Image from "../imgs/event4.jpg";
+import api from "../services/api";
 
-const Events = [
-  {
-    id: 1,
-    title: "Role Model Masterclass 2025 Edition > Course 1: Your Personna",
-    date: "2025-09-09",
-    image: event1Image,
-  },
-  {
-    id: 2,
-    title: "womENcourage™ 2025",
-    date: "2025-09-17",
-    image: event2Image,
-  },
-  {
-    id: 3,
-    title:
-      "Women of Silicon Role Model Masterclass 2025 Edition > Course 2: Your Passion",
-    date: "2025-10-14",
-    image: event3Image,
-  },
-  {
-    id: 4,
-    title: "Women in STEM Awards 2025",
-    date: "2025-10-23",
-    image: event4Image,
-  },
-];
-
+/**
+ * HomePage
+ *
+ * Purpose
+ * -------
+ * Render a grid of upcoming events from the backend.
+ *
+ * Behavior
+ * --------
+ * - GET /events/ on mount.
+ * - Renders Tailwind cards (image, title, date).
+ */
 export default function HomePage() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setError("");
+        const res = await api.get("/events/");
+        if (!mounted) return;
+        setEvents(res.data || []);
+      } catch (e) {
+        setError("Failed to load events.");
+        console.error(e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => (mounted = false);
+  }, []);
+
+  const isAbsoluteUrl = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
+  const imgSrc = (image) => {
+    if (!image) return "/imgs/default.jpg"; 
+    return isAbsoluteUrl(image) ? image : `/imgs/${image}`; 
+  };
+
   return (
-    <div className="w-screen h-screen bg-gray-100 flex flex-col items-center p-6 overflow-auto relative">
-      {/* Sign in πάνω-δεξιά */}
+    <div className="w-screen min-h-screen flex flex-col items-center p-6 overflow-auto relative">
       <Link
         to="/login"
         className="absolute top-6 right-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -44,33 +52,40 @@ export default function HomePage() {
         Sign in
       </Link>
 
-      <h1 className="text-3xl font-bold mb-6">Welcome!</h1>
-      <h2 className="text-2xl mb-4">Events</h2>
+      <h1 className="text-3xl font-bold mb-2 text-white">Welcome!</h1>
+      <h2 className="text-2xl mb-6 text-white">Events</h2>
 
-      <ul className="space-y-6 mb-8 w-full max-w-xl">
-        {Events.map((event) => (
-          <li
-            key={event.id}
-            className="rounded-2xl shadow-md overflow-hidden bg-white transition-transform hover:scale-105 duration-300"
-          >
-            {/* fix: χρησιμοποιούμε backticks στο template string */}
-            <Link to={`/events/${event.id}`} className="block">
-              <div className="relative h-64 w-full overflow-hidden">
-                <img
-                  src={event.image}
-                  alt={"Image for event: " + event.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+      {loading && <p className="text-white">Loading events…</p>}
+      {error && <p className="text-red-200">{error}</p>}
 
-              <div className="p-4">
-                <h3 className="text-lg font-semibold mb-1">{event.title}</h3>
-                <p className="text-sm text-gray-600">{event.date}</p>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {!loading && !error && (
+        <ul className="space-y-6 mb-8 w-full max-w-xl">
+          {events.map((event) => (
+            <li
+              key={event.id}
+              className="rounded-2xl shadow-md overflow-hidden bg-white transition-transform hover:scale-105 duration-300"
+            >
+              <Link to={`/events/${event.id}`} className="block">
+                <div className="relative h-64 w-full overflow-hidden">
+                  <img
+                    src={imgSrc(event.image)}
+                    alt={"Image for event: " + event.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold mb-1">{event.title}</h3>
+                  <p className="text-sm text-gray-600">{event.date}</p>
+                </div>
+              </Link>
+            </li>
+          ))}
+          {events.length === 0 && (
+            <li className="text-white">No events yet.</li>
+          )}
+        </ul>
+      )}
     </div>
   );
 }

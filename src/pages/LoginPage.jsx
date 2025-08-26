@@ -52,10 +52,10 @@ function LoginPage() {
       const res = await api.post("/auth/login/", { email, password });
       const { access, user } = res.data;
 
-      localStorage.setItem("access", access);
+      localStorage.setItem("token", access);
       localStorage.setItem("user", JSON.stringify(user));
 
-      navigate("/events");
+      navigate("/profile");
     } catch (err) {
       setError(
         err?.response?.data?.error ||

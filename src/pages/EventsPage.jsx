@@ -84,7 +84,6 @@ function EventsPage() {
           {events.map((ev) => (
             <li key={ev.id} className="p-4 border rounded shadow">
               <h3 className="text-xl font-semibold">
-                {/* Make title clickable without changing visual design */}
                 <Link
                   to={`/events/${ev.id}`}
                   style={{ textDecoration: "none", color: "inherit" }}
