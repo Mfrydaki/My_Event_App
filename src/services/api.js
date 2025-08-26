@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL, // ✅ CRA uses REACT_APP_ prefix
+  baseURL: process.env.REACT_APP_API_URL, 
 });
 
 // Request interceptor: attach Authorization header if token exists

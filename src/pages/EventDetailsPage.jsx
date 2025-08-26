@@ -12,90 +12,161 @@ import api from "../services/api";
  * Behavior
  * --------
  * - Reads :id from route params.
- * - GET /events/:id/ to fetch event.
+ * - GET /events/:id/ to fetch event (expects attendees_count and optionally attending).
  * - POST /events/:id/attend/ on "Attend" click (requires JWT).
+ * - POST /events/:id/unattend/ on "Unattend" click (requires JWT).
  */
 export default function EventDetailsPage() {
-  const { id } = useParams(); // Mongo ObjectId string
+  const { id } = useParams(); // Mongo ObjectId
   const navigate = useNavigate();
+
   const [event, setEvent] = useState(null);
+  const [attending, setAttending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  /**
-   * Helper: check if a string is an absolute URL
-   */
+  // Helper: absolute URL?
   const isAbsoluteUrl = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
 
-  /**
-   * Helper: resolve image source (absolute URL or local /imgs/* fallback)
-   */
+  // Helper: resolve image path
   const imgSrc = (image) => {
-    if (!image) return "/imgs/default.jpg"; // fallback image in public/imgs
+    if (!image) return "/imgs/default.jpg";
     return isAbsoluteUrl(image) ? image : `/imgs/${image}`;
   };
 
-  /**
-   * Load event on mount or when id changes
-   */
+  // (Optional) fallback: get user id from JWT payload (client-side decode; UI only)
+  function getUserIdFromToken() {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1] || ""));
+      return (
+        String(payload?.user?.id ?? payload?.user_id ?? payload?.sub ?? "") ||
+        null
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  // Fetch event (and attending flag) on mount / id change
   useEffect(() => {
     let mounted = true;
-    (async () => {
+
+    async function fetchEvent() {
       try {
         setError("");
         setLoading(true);
         const res = await api.get(`/events/${id}/`);
         if (!mounted) return;
-        setEvent(res.data);
+
+        const ev = res.data;
+        setEvent(ev);
+
+        // 1) If backend returns attending, use it
+        if (typeof ev.attending === "boolean") {
+          setAttending(ev.attending);
+        } else {
+          // 2) Fallback: infer from attendees array (if present)
+          const uid = getUserIdFromToken();
+          const attendees = Array.isArray(ev?.attendees)
+            ? ev.attendees.map(String)
+            : [];
+          setAttending(uid ? attendees.includes(uid) : false);
+        }
       } catch (e) {
         setError(e?.response?.data?.error || "Failed to load event.");
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
+    }
+
+    fetchEvent();
     return () => {
       mounted = false;
     };
   }, [id]);
 
-  /**
-   * Handle "Attend" click
-   * - Requires JWT token in localStorage (key: "token").
-   * - Uses axios instance (api) which should attach Authorization automatically (interceptor).
-   * - On success, shows a toast/alert and refreshes the event.
-   */
+  // Simple refetch helper (keeps everything in sync with server)
+  async function refetch() {
+    const res = await api.get(`/events/${id}/`);
+    const ev = res.data;
+    setEvent(ev);
+    if (typeof ev.attending === "boolean") {
+      setAttending(ev.attending);
+    } else {
+      const uid = getUserIdFromToken();
+      const attendees = Array.isArray(ev?.attendees)
+        ? ev.attendees.map(String)
+        : [];
+      setAttending(uid ? attendees.includes(uid) : false);
+    }
+  }
+
+  // Attend
   async function handleAttend() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please sign in first.");
+      navigate("/login", { state: { from: `/events/${id}` } });
+      return;
+    }
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please sign in first.");
-        navigate("/login");
-        return;
-      }
       setSaving(true);
-      await api.post(`/events/${id}/attend/`, {}); // Authorization header via interceptor
-      // Re-fetch to reflect any updated fields (e.g., attendees count)
-      const res = await api.get(`/events/${id}/`);
-      setEvent(res.data);
+      await api.post(`/events/${id}/attend/`, {});
+      await refetch(); // απλό και σίγουρο
       alert("You're attending this event!");
     } catch (e) {
-      const msg =
-        e?.response?.status === 401
-          ? "Unauthorized. Please sign in again."
-          : e?.response?.data?.error || "Failed to attend.";
-      alert(msg);
+      const status = e?.response?.status;
+      if (status === 401) {
+        alert("Unauthorized. Please sign in.");
+        navigate("/login", { state: { from: `/events/${id}` } });
+      } else if (status === 409) {
+        alert("You are already attending this event.");
+        await refetch();
+      } else {
+        alert(e?.response?.data?.error || "Failed to attend.");
+      }
     } finally {
       setSaving(false);
     }
   }
 
-  if (loading)
-    return <div className="min-h-screen p-6 text-white">Loading…</div>;
+  // Unattend
+  async function handleUnattend() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please sign in first.");
+      navigate("/login", { state: { from: `/events/${id}` } });
+      return;
+    }
+    try {
+      setSaving(true);
+      await api.post(`/events/${id}/unattend/`, {});
+      await refetch();
+      alert("You left this event.");
+    } catch (e) {
+      const status = e?.response?.status;
+      if (status === 401) {
+        alert("Unauthorized. Please sign in.");
+        navigate("/login", { state: { from: `/events/${id}` } });
+      } else if (status === 409) {
+        alert("You are not attending this event.");
+        await refetch();
+      } else {
+        alert(e?.response?.data?.error || "Failed to unattend.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <div className="min-h-screen p-6">Loading…</div>;
 
   if (error)
     return (
-      <div className="min-h-screen p-6 text-red-200">
+      <div className="min-h-screen p-6 text-red-600">
         {error}{" "}
         <button className="underline" onClick={() => navigate(-1)}>
           Go back
@@ -103,11 +174,15 @@ export default function EventDetailsPage() {
       </div>
     );
 
-  if (!event)
-    return <div className="min-h-screen p-6 text-white">Event not found.</div>;
+  if (!event) return <div className="min-h-screen p-6">Event not found.</div>;
 
   const text =
     event.description ?? event.details ?? "No description available yet.";
+  const attendeesCount = Number(
+    Array.isArray(event?.attendees)
+      ? event.attendees.length
+      : event?.attendees_count || 0
+  );
 
   return (
     <div className="min-h-screen p-6">
@@ -126,22 +201,38 @@ export default function EventDetailsPage() {
         </div>
 
         <div className="p-6 space-y-4">
-          <h2 className="text-xl font-semibold">About this event</h2>
+          <h2 className="text-xl font-semibold">About this event:</h2>
           <p className="text-gray-800 leading-relaxed">{text}</p>
 
           <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              disabled={saving}
-              className="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
-              onClick={handleAttend}
-            >
-              {saving ? "Joining…" : "Attend"}
-            </button>
+            {attending ? (
+              <button
+                type="button"
+                disabled={saving}
+                className="px-5 py-2.5 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-60"
+                onClick={handleUnattend}
+              >
+                {saving ? "Leaving…" : "Unattend"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={saving}
+                className="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+                onClick={handleAttend}
+              >
+                {saving ? "Joining…" : "Attend"}
+              </button>
+            )}
+
+            <span className="text-sm text-gray-700">
+              {attendeesCount} {attendeesCount === 1 ? "person" : "people"}{" "}
+              attending
+            </span>
 
             <Link
               to="/"
-              className="px-5 py-2.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="ml-auto px-5 py-2.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               Back
             </Link>
