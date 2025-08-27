@@ -63,7 +63,7 @@ function LoginPage() {
         localStorage.setItem("user", JSON.stringify(user));
       }
 
-      navigate("/events");
+      navigate("/");
     } catch (err) {
       setError(
         err?.response?.data?.error ||
@@ -106,7 +106,7 @@ function LoginPage() {
         {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          {isLogin ? "New in AP?" : "Already have an account?"}
+          {isLogin ? "New in MRK" : "Already have an account?"}
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="ml-1 text-indigo-600 font-semibold hover:underline"
@@ -120,3 +120,4 @@ function LoginPage() {
 }
 
 export default LoginPage;
+

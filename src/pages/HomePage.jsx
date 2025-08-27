@@ -45,12 +45,12 @@ export default function HomePage() {
 
   return (
     <div className="w-screen min-h-screen flex flex-col items-center p-6 overflow-auto relative">
-      <Link
+      {/* <Link
         to="/login"
         className="absolute top-6 right-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
       >
         Sign in
-      </Link>
+      </Link> */}
 
       <h1 className="text-3xl font-bold mb-2 text-white">Welcome!</h1>
       <h2 className="text-2xl mb-6 text-white">Events</h2>

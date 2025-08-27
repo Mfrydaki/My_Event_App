@@ -6,40 +6,23 @@ import { useState } from "react";
  * Purpose
  * -------
  * Display a user registration form and submit credentials
- * (email + password) to the parent component.
+ * (first name, last name, email, password) to the parent component.
  *
  * Behavior
  * --------
- * - User enters email, password, confirm password.
+ * - User enters details.
+ * - User can toggle password visibility.
  * - On submit:
  *   * If passwords do not match, show an error message.
- *   * Otherwise, call the onRegister function passed via props.
- *
- * Props
- * -----
- * onRegister : Function
- * Callback function that receives { email, password }.
- *
- * State
- * -----
- * email : String
- * User email input.
- * password : String
- * User password input.
- * confirmPassword : String
- * User confirmation password input.
- * error : String
- * Error message for mismatched passwords.
- *
- * Returns
- * -------
- * JSX.Element
- *     The registration form.
+ *   * Otherwise, call onRegister({ first_name, last_name, email, password }).
  */
 function RegistrationForm({ onRegister }) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
@@ -49,7 +32,7 @@ function RegistrationForm({ onRegister }) {
       return;
     }
     setError("");
-    onRegister({ email, password });
+    onRegister({ first_name: firstName, last_name: lastName, email, password });
   };
 
   return (
@@ -60,6 +43,24 @@ function RegistrationForm({ onRegister }) {
       <h2 className="text-xl font-bold mb-4">Sign up</h2>
 
       <input
+        type="text"
+        placeholder="First Name"
+        value={firstName}
+        onChange={(e) => setFirstName(e.target.value)}
+        required
+        className="w-full border rounded px-3 py-2"
+      />
+
+      <input
+        type="text"
+        placeholder="Last Name"
+        value={lastName}
+        onChange={(e) => setLastName(e.target.value)}
+        required
+        className="w-full border rounded px-3 py-2"
+      />
+
+      <input
         type="email"
         placeholder="Email"
         value={email}
@@ -68,17 +69,28 @@ function RegistrationForm({ onRegister }) {
         className="w-full border rounded px-3 py-2"
       />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        className="w-full border rounded px-3 py-2"
-      />
+      {/* Password input with toggle */}
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="w-full border rounded px-3 py-2 pr-16"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm text-indigo-600 hover:underline"
+        >
+          {showPassword ? "Hide" : "Show"}
+        </button>
+      </div>
 
+      {/* Confirm password */}
       <input
-        type="password"
+        type={showPassword ? "text" : "password"}
         placeholder="Confirm Password"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -90,7 +102,7 @@ function RegistrationForm({ onRegister }) {
 
       <button
         type="submit"
-        className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+        className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 w-full"
       >
         Sign up
       </button>

@@ -5,10 +5,16 @@ import EventDetailsPage from "./pages/EventDetailsPage";
 import LoginPage from "./pages/LoginPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import ProfilePage from "./pages/ProfilePage";
+import Navbar from "./components/Navbar";
+
 
 function App() {
   return (
     <Router>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+       <div className="flex-1">
+
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/events" element={<EventsPage />} />
@@ -17,6 +23,9 @@ function App() {
         <Route path="/create" element={<CreateEventPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Routes>
+      /</div>
+      /</div>
+
     </Router>
   );
 }

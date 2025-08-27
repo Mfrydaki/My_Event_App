@@ -115,12 +115,12 @@ export default function EventDetailsPage() {
     try {
       setSaving(true);
       await api.post(`/events/${id}/attend/`, {});
-      await refetch(); // απλό και σίγουρο
+      await refetch(); 
       alert("You're attending this event!");
     } catch (e) {
       const status = e?.response?.status;
       if (status === 401) {
-        alert("Unauthorized. Please sign in.");
+        alert("Please sign in to connect.");
         navigate("/login", { state: { from: `/events/${id}` } });
       } else if (status === 409) {
         alert("You are already attending this event.");
