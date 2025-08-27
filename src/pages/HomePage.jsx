@@ -52,8 +52,8 @@ export default function HomePage() {
         Sign in
       </Link> */}
 
-      <h1 className="text-3xl font-bold mb-2 text-white">Welcome!</h1>
-      <h2 className="text-2xl mb-6 text-white">Events</h2>
+      {/* <h1 className="text-3xl font-bold mb-2 text-gold">Welcome!</h1> */}
+      <h2 className="text-4xl mb-6 text-gold ">Upcoming Events</h2>
 
       {loading && <p className="text-white">Loading events…</p>}
       {error && <p className="text-red-200">{error}</p>}

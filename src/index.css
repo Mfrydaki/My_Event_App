@@ -8,13 +8,12 @@ body {
   color: rgb(123, 97, 97);
   min-height: 100vh;
 
-  background: linear-gradient(-45deg, #cfd9df, #e2ebf0, #a1c4fd, #c2e9fb);
+  background: #0c0a09;
+
+  /* background: linear-gradient(-45deg, #cfd9df, #e2ebf0, #a1c4fd, #c2e9fb);
   background-size: 400% 400%;
-  animation: gradientAnimation 25s ease infinite;
+  animation: gradientAnimation 25s ease infinite; */
 }
-
-
-
 
 @keyframes gradientAnimation {
   0% { background-position: 0% 50%; }

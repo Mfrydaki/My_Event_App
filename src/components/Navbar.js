@@ -1,4 +1,3 @@
-// src/components/Navbar.js
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
@@ -20,7 +19,7 @@ export default function Navbar() {
   const { isAuthenticated, logout } = useAuth();
 
   return (
-    <nav className="bg-indigo-600 text-white shadow-md">
+    <nav className="bg-indigo-600 text-black shadow-md">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo (clickable link to homepage) */}

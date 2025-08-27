@@ -59,6 +59,8 @@ function LoginPage() {
       }
 
       localStorage.setItem("token", access);
+      window.dispatchEvent(new Event("storage"));
+
       if (user) {
         localStorage.setItem("user", JSON.stringify(user));
       }
