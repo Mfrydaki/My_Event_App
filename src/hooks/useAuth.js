@@ -43,8 +43,8 @@ export default function useAuth() {
    * Login with email and password.
    * Sends request to backend and saves token if successful.
    *
-   * @param {string} email - User email
-   * @param {string} password - User password
+   * @param {string} email 
+   * @param {string} password 
    * @returns {Promise<{ok: boolean, error?: string}>}
    */
   const login = useCallback(async (email, password) => {

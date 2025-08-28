@@ -1,8 +1,9 @@
+// src/pages/LoginPage.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 import LoginForm from "../ui/LoginForm";
 import RegistrationForm from "../ui/RegistrationForm";
-import api from "../services/api";
-import { useNavigate } from "react-router-dom";
 
 /**
  * LoginPage Component
@@ -13,60 +14,72 @@ import { useNavigate } from "react-router-dom";
  *
  * Behavior
  * --------
- * - Provides a toggle between login and registration forms.
+ * - Toggles between login form and registration form.
  * - On login:
- *   POST /auth/login/ with { email, password }.
- *   If successful:
- *     - Stores the JWT access token in localStorage with key: "token".
- *     - Stores the user object in localStorage with key: "user".
- *     - Redirects the user to the /events page.
- * - On registration:
- *   POST /auth/register/ with { email, password }.
- *   If successful:
- *     - Switches back to the login form.
+ *   - Sends credentials { email, password } to /auth/login/.
+ *   - Saves JWT access token in localStorage.
+ *   - Saves user object (if returned).
+ *   - Dispatches "storage" event to sync authentication across tabs.
+ *   - Navigates user to homepage ("/").
+ * - On register:
+ *   - Sends new user data { first_name, last_name, email, password } to /auth/register/.
+ *   - If successful, switches back to login form.
+ * - Shows error message if backend responds with error.
  *
  * State
  * -----
- * isLogin : Boolean
- *   Determines whether to display the login or registration form.
+ * isLogin : Bool
+ *   If true, show login form; if false, show registration form.
  * error : String
- *   Holds an error message if login or registration fails.
+ *   Error message to display if login/register fails.
  *
  * Returns
  * -------
  * JSX.Element
- *   The login or registration form with error handling.
+ *   The authentication page with login/registration forms.
  */
 function LoginPage() {
+  // State: whether user is on Login (true) or Register (false)
   const [isLogin, setIsLogin] = useState(true);
+
+  // State: error message (shown under form)
   const [error, setError] = useState("");
+
+  // React Router navigation
   const navigate = useNavigate();
 
   /**
-   * handleLogin
+   * Handle user login.
    *
-   * Send credentials to the backend for authentication.
-   * If successful, save token + user in localStorage and redirect to /events.
+   * @param {Object} payload - User credentials.
+   * @param {string} payload.email - User email.
+   * @param {string} payload.password - User password.
    */
   const handleLogin = async ({ email, password }) => {
     try {
       setError("");
-      const res = await api.post("/auth/login/", { email, password });
+
+      // POST to backend
+      const res = await api.post(
+        "/auth/login/",
+        { email, password },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
       const { access, user } = res.data || {};
+      if (!access) throw new Error("No access token returned from server.");
 
-      if (!access) {
-        throw new Error("No access token returned from server.");
-      }
-
+      // Save token & user in localStorage
       localStorage.setItem("token", access);
-      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("storage")); // sync across tabs
+      if (user) localStorage.setItem("user", JSON.stringify(user));
 
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-      }
-
+      // Redirect to homepage
       navigate("/");
     } catch (err) {
+      // Show error message
       setError(
         err?.response?.data?.error ||
           err?.response?.data?.detail ||
@@ -77,17 +90,35 @@ function LoginPage() {
   };
 
   /**
-   * handleRegister
+   * Handle new user registration.
    *
-   * Send credentials to create a new user account.
-   * If successful, switch back to the login form.
+   * @param {Object} payload - Registration data.
+   * @param {string} payload.first_name - User's first name.
+   * @param {string} payload.last_name - User's last name.
+   * @param {string} payload.email - User email.
+   * @param {string} payload.password - User password.
    */
-  const handleRegister = async ({ email, password }) => {
+  const handleRegister = async (payload) => {
     try {
       setError("");
-      await api.post("/auth/register/", { email, password });
+
+      console.log("PAYLOAD:", payload, typeof payload);
+      console.log("JSON →", JSON.stringify(payload));
+
+      // POST to backend
+      const res = await api.post("/auth/register/", payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      console.log("REGISTER OK:", res.data);
+
+      // Switch back to login form after success
       setIsLogin(true);
     } catch (err) {
+      console.log("REGISTER ERROR STATUS:", err?.response?.status);
+      console.log("REGISTER ERROR BODY:", err?.response?.data);
+
+      // Show error message
       setError(
         err?.response?.data?.error ||
           err?.response?.data?.detail ||
@@ -99,14 +130,17 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-950 to-indigo-300 animate-gradient">
       <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+        {/* Show login or registration form */}
         {isLogin ? (
           <LoginForm onLogin={handleLogin} />
         ) : (
           <RegistrationForm onRegister={handleRegister} />
         )}
 
+        {/* Show error if exists */}
         {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
+        {/* Toggle login/register */}
         <p className="mt-4 text-center text-sm text-gray-600">
           {isLogin ? "New in MRK" : "Already have an account?"}
           <button
@@ -122,4 +156,3 @@ function LoginPage() {
 }
 
 export default LoginPage;
-

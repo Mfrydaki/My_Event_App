@@ -32,8 +32,13 @@ function RegistrationForm({ onRegister }) {
       return;
     }
     setError("");
-    onRegister({ first_name: firstName, last_name: lastName, email, password });
-  };
+    onRegister({
+      first_name: firstName, 
+      last_name: lastName, 
+      email, 
+      password,
+  });
+}
 
   return (
     <form

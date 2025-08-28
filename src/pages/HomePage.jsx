@@ -3,22 +3,52 @@ import { Link } from "react-router-dom";
 import api from "../services/api";
 
 /**
- * HomePage
+ * HomePage Component
  *
  * Purpose
  * -------
- * Render a grid of upcoming events from the backend.
+ * Render a grid of upcoming events fetched from the backend.
+ * Serves as the landing page, showing users the latest events
+ * in a visual, card-based layout.
  *
  * Behavior
  * --------
- * - GET /events/ on mount.
- * - Renders Tailwind cards (image, title, date).
+ * - On mount (useEffect), it sends a GET request to /events/.
+ * - While loading, it shows a "Loading events…" message.
+ * - If the request fails, it shows an error message.
+ * - If successful, it displays a list of events as cards
+ *   (image, title, date), each linking to its details page.
+ *
+ * State
+ * -----
+ * events : Array
+ *   Stores the events returned from the backend.
+ * loading : Boolean
+ *   True while events are being fetched.
+ * error : String
+ *   Holds an error message if the request fails.
+ *
+ * Helpers
+ * -------
+ * isAbsoluteUrl(v : string) : boolean
+ *   Check if a string is an absolute URL (starts with http/https).
+ *
+ * imgSrc(image : string) : string
+ *   Return a usable image path (absolute URL or fallback /imgs/default.jpg).
+ *
+ * Returns
+ * -------
+ * JSX.Element
+ *   - A loading indicator, or
+ *   - An error message, or
+ *   - A responsive list of event cards with title, date, and image.
  */
 export default function HomePage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Fetch events on mount
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -37,23 +67,25 @@ export default function HomePage() {
     return () => (mounted = false);
   }, []);
 
+  /**
+   * Check if given string is an absolute URL.
+   */
   const isAbsoluteUrl = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
+
+  /**
+   * Resolve an image path.
+   * - If empty, return default placeholder.
+   * - If absolute URL, return as-is.
+   * - Otherwise assume local /imgs/ path.
+   */
   const imgSrc = (image) => {
-    if (!image) return "/imgs/default.jpg"; 
-    return isAbsoluteUrl(image) ? image : `/imgs/${image}`; 
+    if (!image) return "/imgs/default.jpg";
+    return isAbsoluteUrl(image) ? image : `/imgs/${image}`;
   };
 
   return (
     <div className="w-screen min-h-screen flex flex-col items-center p-6 overflow-auto relative">
-      {/* <Link
-        to="/login"
-        className="absolute top-6 right-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-      >
-        Sign in
-      </Link> */}
-
-      {/* <h1 className="text-3xl font-bold mb-2 text-gold">Welcome!</h1> */}
-      <h2 className="text-4xl mb-6 text-gold ">Upcoming Events</h2>
+      <h2 className="text-4xl mb-6 text-gold">Upcoming Events</h2>
 
       {loading && <p className="text-white">Loading events…</p>}
       {error && <p className="text-red-200">{error}</p>}
@@ -81,6 +113,7 @@ export default function HomePage() {
               </Link>
             </li>
           ))}
+
           {events.length === 0 && (
             <li className="text-white">No events yet.</li>
           )}

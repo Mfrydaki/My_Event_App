@@ -74,6 +74,8 @@ export default function ProfilePage() {
           api.get("/api/users/me/events/attending"),
         ]);
 
+    
+
         if (!mounted) return;
         setProfile(meRes.data?.user || meRes.data || null);
         setEvents(Array.isArray(attendingRes.data) ? attendingRes.data : []);
@@ -110,9 +112,6 @@ export default function ProfilePage() {
   if (!profile)
     return <div className="min-h-screen p-6">No profile data found.</div>;
 
-  const fullName =
-    [profile.first_name, profile.last_name].filter(Boolean).join(" ") || null;
-
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -120,14 +119,8 @@ export default function ProfilePage() {
         {/* Profile card  */}
         <div className="rounded-2xl shadow bg-white/85 backdrop-blur">
           <div className="p-6">
-            <h1 className="text-2xl font-bold mb-1">My Profile</h1>
-            <p className="text-gray-700">Email: {profile.email}</p>
-            {fullName && <p className="text-gray-700">Name: {fullName}</p>}
-            {profile.date_of_birth && (
-              <p className="text-gray-700">
-                Date of Birth: {profile.date_of_birth}
-              </p>
-            )}
+            <h1 className="text-2xl font-bold mb-1">Welcome to your Account, </h1>
+            <p className= "text-2xl font-bold mb-1">{profile.first_name}</p>
           </div>
         </div>
 
@@ -135,7 +128,7 @@ export default function ProfilePage() {
         <div className="rounded-2xl shadow bg-white/85 backdrop-blur">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Attending Events</h2>
+              <h2 className="text-xl font-semibold"> Attending Events : </h2>
               <Link
                 to="/"
                 className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
