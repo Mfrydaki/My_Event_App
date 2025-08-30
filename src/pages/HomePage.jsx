@@ -51,21 +51,32 @@ export default function HomePage() {
   // Fetch events on mount
   useEffect(() => {
     let mounted = true;
-    (async () => {
+
+    const fetchOnce = async () => {
       try {
         setError("");
-        const res = await api.get("/events/");
-        if (!mounted) return;
-        setEvents(res.data || []);
-      } catch (e) {
-        setError("Failed to load events.");
+        const res = await api.get("/events/", {params:{_: Date.now()}});
+        if (mounted) setEvents(res.data || []);
+      }catch (e){
         console.error(e);
-      } finally {
-        if (mounted) setLoading(false);
+        if (mounted) setError ("Failed to load events.");
+      }finally{
+          if (mounted) setLoading(false);
       }
-    })();
-    return () => (mounted = false);
-  }, []);
+    };
+
+    fetchOnce();
+
+    //Reload every 30"
+    const id = setInterval(fetchOnce, 30000);
+
+    //Stop polling
+    return() => {
+      mounted = false;
+    clearInterval(id);
+ };
+}, []);
+
 
   /**
    * Check if given string is an absolute URL.
@@ -84,31 +95,32 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-screen min-h-screen flex flex-col items-center p-6 overflow-auto relative">
+    <div className="w-screen min-h-screen flex flex-col items-center p-10 overflow-auto relative">
       <h2 className="text-4xl mb-6 text-gold">Upcoming Events</h2>
 
       {loading && <p className="text-white">Loading events…</p>}
       {error && <p className="text-red-200">{error}</p>}
 
       {!loading && !error && (
-        <ul className="space-y-6 mb-8 w-full max-w-xl">
+        <ul className="space-y-6 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
           {events.map((event) => (
             <li
               key={event.id}
-              className="rounded-2xl shadow-md overflow-hidden bg-white transition-transform hover:scale-105 duration-300"
+              className="rounded-2xl shadow-md overflow-hidden bg bg-indigo-600 transition-transform hover:scale-100 duration-300"
             >
               <Link to={`/events/${event.id}`} className="block">
-                <div className="relative h-64 w-full overflow-hidden">
+                <div className="relative w-full h-80 overflow-hidden">
                   <img
                     src={imgSrc(event.image)}
                     alt={"Image for event: " + event.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full 
+                    "
                   />
                 </div>
 
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-1">{event.title}</h3>
-                  <p className="text-sm text-gray-600">{event.date}</p>
+                  <h3 className="text-black text-lg font-semibold mb-1">{event.title}</h3>
+                  <p className="text-sm text-black">{event.date}</p>
                 </div>
               </Link>
             </li>

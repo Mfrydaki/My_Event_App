@@ -4,48 +4,26 @@ import api from "../services/api";
 
 /**
  * EventDetailsPage
- *
- * Purpose
- * -------
- * Fetch and display details of a single event by its Mongo ObjectId.
- *
- * Behavior
- * --------
- * - Reads `:id` from route params.
- * - GET /events/:id/ to fetch event details (title, date, description, attendees).
- * - Shows event image (with gradient overlay and fallback if missing).
- * - Displays attendees count and whether the logged-in user is attending.
- * - POST /events/:id/attend/ when clicking "Attend" (requires JWT).
- * - POST /events/:id/unattend/ when clicking "Unattend" (requires JWT).
-
+ * Fetch and display a single event; allows attend/unattend (JWT).
  */
 export default function EventDetailsPage() {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
 
+  const [event, setEvent] = useState(null);
+  const [attending, setAttending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const [event, setEvent] = useState(null); 
-  const [attending, setAttending] = useState(false); 
-  const [loading, setLoading] = useState(true); 
-  const [saving, setSaving] = useState(false); 
-  const [error, setError] = useState(""); 
-
-  /**
-   * Helper: check if URL is absolute
-   */
   const isAbsoluteUrl = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
+  const imgSrc = (image) =>
+    !image
+      ? "/imgs/default.jpg"
+      : isAbsoluteUrl(image)
+      ? image
+      : `/imgs/${image}`;
 
-  /**
-   * Helper: resolve image path (absolute or local fallback)
-   */
-  const imgSrc = (image) => {
-    if (!image) return "/imgs/default.jpg";
-    return isAbsoluteUrl(image) ? image : `/imgs/${image}`;
-  };
-
-  /**
-   * Helper: decode JWT (client-side only for UI) to get user id
-   */
   function getUserIdFromToken() {
     const token = localStorage.getItem("token");
     if (!token) return null;
@@ -60,26 +38,21 @@ export default function EventDetailsPage() {
     }
   }
 
-  /**
-   * Effect: Fetch event when id changes
-   */
+  // --- FETCH EVENT (με cache-bust) ---
   useEffect(() => {
     let mounted = true;
-
-    async function fetchEvent() {
+    (async () => {
       try {
         setError("");
         setLoading(true);
-        const res = await api.get(`/events/${id}/`);
+        const res = await api.get(`/events/${id}/`, {
+          params: { _: Date.now() },
+        });
         if (!mounted) return;
-
         const ev = res.data;
         setEvent(ev);
-
-        // If backend gives "attending" flag use it, otherwise infer from attendees
-        if (typeof ev.attending === "boolean") {
-          setAttending(ev.attending);
-        } else {
+        if (typeof ev.attending === "boolean") setAttending(ev.attending);
+        else {
           const uid = getUserIdFromToken();
           const attendees = Array.isArray(ev?.attendees)
             ? ev.attendees.map(String)
@@ -91,24 +64,18 @@ export default function EventDetailsPage() {
       } finally {
         if (mounted) setLoading(false);
       }
-    }
-
-    fetchEvent();
+    })();
     return () => {
       mounted = false;
     };
   }, [id]);
 
-  /**
-   * Helper: refetch event after attend/unattend
-   */
   async function refetch() {
-    const res = await api.get(`/events/${id}/`);
+    const res = await api.get(`/events/${id}/`, { params: { _: Date.now() } });
     const ev = res.data;
     setEvent(ev);
-    if (typeof ev.attending === "boolean") {
-      setAttending(ev.attending);
-    } else {
+    if (typeof ev.attending === "boolean") setAttending(ev.attending);
+    else {
       const uid = getUserIdFromToken();
       const attendees = Array.isArray(ev?.attendees)
         ? ev.attendees.map(String)
@@ -117,13 +84,10 @@ export default function EventDetailsPage() {
     }
   }
 
-  /**
-   * Handle: Attend event (requires JWT)
-   */
   async function handleAttend() {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please sign in first.");
+      alert("Please sign in to connect.");
       navigate("/login", { state: { from: `/events/${id}` } });
       return;
     }
@@ -131,30 +95,27 @@ export default function EventDetailsPage() {
       setSaving(true);
       await api.post(`/events/${id}/attend/`, {});
       await refetch();
-      alert("You're attending this event!");
+      alert("You're going 💪");
     } catch (e) {
-      const status = e?.response?.status;
-      if (status === 401) {
+      const s = e?.response?.status;
+      if (s === 401) {
         alert("Please sign in to connect.");
         navigate("/login", { state: { from: `/events/${id}` } });
-      } else if (status === 409) {
-        alert("You are already attending this event.");
+      } else if (s === 409) {
+        alert("Already attending.");
         await refetch();
       } else {
-        alert(e?.response?.data?.error || "Failed to attend.");
+        alert(e?.response?.data?.error || "Sorry. Failed to attend.");
       }
     } finally {
       setSaving(false);
     }
   }
 
-  /**
-   * Handle: Unattend event (requires JWT)
-   */
   async function handleUnattend() {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please sign in first.");
+      alert("Please sign in to connect.");
       navigate("/login", { state: { from: `/events/${id}` } });
       return;
     }
@@ -162,13 +123,13 @@ export default function EventDetailsPage() {
       setSaving(true);
       await api.post(`/events/${id}/unattend/`, {});
       await refetch();
-      alert("You left this event.");
+      alert("You left this event 👋");
     } catch (e) {
-      const status = e?.response?.status;
-      if (status === 401) {
-        alert("Unauthorized. Please sign in.");
+      const s = e?.response?.status;
+      if (s === 401) {
+        alert("Please sign in to connect.");
         navigate("/login", { state: { from: `/events/${id}` } });
-      } else if (status === 409) {
+      } else if (s === 409) {
         alert("You are not attending this event.");
         await refetch();
       } else {
@@ -179,10 +140,7 @@ export default function EventDetailsPage() {
     }
   }
 
-  // Loading state
   if (loading) return <div className="min-h-screen p-6">Loading…</div>;
-
-  // Error state
   if (error)
     return (
       <div className="min-h-screen p-6 text-red-600 bg-[#0c0a09]">
@@ -192,16 +150,15 @@ export default function EventDetailsPage() {
         </button>
       </div>
     );
-
-  // Not found
   if (!event)
     return (
       <div className="min-h-screen p-6 bg-[#0c0a09]">Event not found.</div>
     );
 
-  // Extract info
-  const text =
-    event.description ?? event.details ?? "No description available yet.";
+  // ✅ Δείξε description ή details (fallback)
+  const aboutText =
+    (event.details || "").trim() ||
+    "No description available yet.";
   const attendeesCount = Number(
     Array.isArray(event?.attendees)
       ? event.attendees.length
@@ -209,14 +166,15 @@ export default function EventDetailsPage() {
   );
 
   return (
-    <div className="min-h-screen p-6 bg-[#0c0a09] text-white">
+    <div className="min-h-min p-6 bg-[#0c0a09] text-white">
       <div className="max-w-3xl mx-auto rounded-2xl shadow overflow-hidden bg-[#1a1a1f]">
-        {/* Image with gradient overlay */}
-        <div className="relative h-80 w-full overflow-hidden">
+        {/* ✅ Εικόνα: aspect ratio + object-cover + cache-bust */}
+        <div className="relative w-full aspect-[16/9] overflow-hidden">
           <img
-            src={imgSrc(event.image)}
-            alt={"Image for event: " + event.title}
+            src={`${imgSrc(event.image)}?v=${event.updated_at || Date.now()}`}
+            alt={`Image for event: ${event.title}`}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 p-5 text-white">
@@ -225,10 +183,19 @@ export default function EventDetailsPage() {
           </div>
         </div>
 
-        {/* Event details */}
+        {/* ✅ Details: σωστό heading (χωρίς h-80) + κείμενο */}
         <div className="p-6 space-y-4">
-          <h2 className="text-xl font-semibold">About this event:</h2>
-          <p className="text-gray-300 leading-relaxed">{text}</p>
+          <h2 className="text-lg font-semibold">About this event:</h2>
+          {event.description && (
+            <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+              {event.description}
+            </p>
+          )}
+          {event.details && (
+            <p className="text-gray-400 leading-relaxed whitespace-pre-line mt-2">
+              {event.details}
+            </p>
+          )}
 
           <div className="flex items-center gap-3 pt-2">
             {attending ? (
@@ -244,7 +211,7 @@ export default function EventDetailsPage() {
               <button
                 type="button"
                 disabled={saving}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+                className="px-5 py-2.5 bg-indigo-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
                 onClick={handleAttend}
               >
                 {saving ? "Joining…" : "Attend"}
@@ -258,7 +225,7 @@ export default function EventDetailsPage() {
 
             <Link
               to="/"
-              className="ml-auto px-5 py-2.5 rounded border border-gray-700 text-gray-300 hover:bg-gray-800"
+              className="ml-auto px-5 py-2.5 rounded border border-indigo-600 text-gray-300 hover:bg-gray-800"
             >
               Back
             </Link>
