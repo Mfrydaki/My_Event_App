@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import ProfilePage from "./pages/ProfilePage";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/create" element={<CreateEventPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Routes>
+          <Footer/>
         </div>
       </div>
     </Router>

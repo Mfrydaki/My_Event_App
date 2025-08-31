@@ -67,7 +67,7 @@ export default function UpcomingEventsCarousel({
                   <img
                     src={imgSrc(ev.image)}
                     alt={`Image for event: ${ev.title || "Event"}`}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="h-full w-full object-contain bg-black rounded-xl"
                     loading="lazy"
                     imageFit= "contain"
                     imagePosition ="center"

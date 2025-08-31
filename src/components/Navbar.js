@@ -19,12 +19,12 @@ export default function Navbar() {
   const { isAuthenticated, logout } = useAuth();
 
   return (
-    <nav className="bg-indigo-900 text-black shadow-md">
+    <nav className=" text-white">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo (clickable link to homepage) */}
           <Link to="/" className="text-2xl font-bold">
-            ..:: Shero ::..
+            ..:: Shero_hub::..
           </Link>
 
           {/* Right-side navigation links */}
@@ -55,7 +55,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="inline-block rounded-2xl text-black bg-indigo-800 px-6 py-3 text-sm font-semibold shadow-lg transition hover:bg-indigo-900 border-2 border-black"
+                className="inline-block rounded-2xl text-white  px-6 py-3 text-sm font-semibold shadow-lg transition hover:bg-indigo-900 border-2 border-white"
 
                               >
                 Connect

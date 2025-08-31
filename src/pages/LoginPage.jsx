@@ -128,8 +128,14 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-950 to-indigo-300 animate-gradient">
-      <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center ">
+      <img
+        src="/imgs/login.jpg"
+        alt="login image"
+        className="absolute inset-0 w-full h-full object-cover -z-10"
+      />
+      <div className=" text-black relative z-10  backdrop-blur-md p-6 rounded shadow-md w-full max-w-md mx-4">
+
         {/* Show login or registration form */}
         {isLogin ? (
           <LoginForm onLogin={handleLogin} />
@@ -141,11 +147,11 @@ function LoginPage() {
         {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
         {/* Toggle login/register */}
-        <p className="mt-4 text-center text-sm text-gray-600">
-          {isLogin ? "New in MRK" : "Already have an account?"}
+        <p className="mt-4 text-center text-sm text-black">
+          {isLogin ? "New in Shero_hub" : "Already have an account?"}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="ml-1 text-indigo-600 font-semibold hover:underline"
+            className="ml-1 text-black font-semibold hover:underline"
           >
             {isLogin ? "Sign up" : "Sign in"}
           </button>
