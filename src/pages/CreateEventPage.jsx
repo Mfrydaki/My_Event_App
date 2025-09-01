@@ -1,6 +1,8 @@
+// src/pages/CreateEventPage.jsx
 import React, { useState } from "react";
-import api from "../services/api"; // axios instance with baseURL and token interceptor
+import api from "../services/api";
 import EventForm from "../ui/EventForm";
+import { useNavigate } from "react-router-dom";
 
 /**
  * CreateEventPage Component
@@ -11,48 +13,42 @@ import EventForm from "../ui/EventForm";
  *
  * Behavior
  * --------
- * - Renders an EventForm component.
- * - When the form is submitted, sends a POST request to /events/.
- * - Requires a valid JWT token (set in localStorage by Login).
- * - If successful, could redirect user to /events (optional).
- *
- * State
- * -----
- * error : String
- *     Holds an error message if event creation fails.
- *
- * Returns
- * -------
- * JSX.Element
- *     The event creation form and any error messages.
+ * - Renders EventForm inside a centered card.
+ * - Full-page background image.
+ * - On success, redirects to /events.
  */
 export default function CreateEventPage() {
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  /**
-   * handleCreate
-   *
-   * Submit event data to the backend API.
-   *
-   * Parameters
-   * ----------
-   * eventData : Object
-   *   Form fields: title, description, details, date, image (optional).
-   *
-   * Behavior
-   * --------
-   * - Sends POST request to /events/.
-   * - Updates error state if the request fails.
-   */
-  const handleCreate = async (eventData) => {
+  const handleCreate = async ({
+    title,
+    description,
+    details,
+    date,
+    imageFile,
+  }) => {
     try {
       setError("");
-      await api.post("/events/", eventData);
 
-      // ✅ Event created successfully
-      // TODO: Optionally navigate to /events after creation
-      // navigate("/events");
+      const formData = new FormData();
+      formData.append("title", title || "");
+      formData.append("description", description || "");
+      formData.append("details", details || "");
+      formData.append("date", date || ""); // date in ISO (from EventForm)
+      if (imageFile) formData.append("image", imageFile);
+
+      await api.post("/events/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      navigate("/events");
     } catch (err) {
+      console.error(
+        "Error creating event:",
+        err?.response?.status,
+        err?.response?.data
+      );
       setError(
         err?.response?.data?.error ||
           err?.response?.data?.detail ||
@@ -62,10 +58,17 @@ export default function CreateEventPage() {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Submit Event</h1>
-      <EventForm onSubmit={handleCreate} />
-      {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+    <div
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center"
+      style={{ backgroundImage: "url('/imgs/z.jpg')" }} // ✅ βάλε την εικόνα στο public/imgs/z.jpg
+    >
+    
+      {/* Card ΜΠΡΟΣΤΑ από το overlay */}
+      <div className="relative z-10 w-full max-w-xl bg-black/60 backdrop-blur-sm p-6 rounded-2xl">
+        <h1 className="text-2xl font-bold mb-4 text-white">Submit Event</h1>
+        <EventForm onSubmit={handleCreate} />
+        {error && <p className="text-red-300 text-sm mt-2">{error}</p>}
+      </div>
     </div>
   );
 }
