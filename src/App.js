@@ -8,12 +8,12 @@ import ProfilePage from "./pages/ProfilePage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-function App() {
+export default function App(){
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-1">
+        <main className="flex-1">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/events" element={<EventsPage />} />
@@ -22,11 +22,9 @@ function App() {
             <Route path="/create" element={<CreateEventPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Routes>
+          /</main>          
           <Footer/>
         </div>
-      </div>
-    </Router>
+      </Router>
   );
 }
-
-export default App;

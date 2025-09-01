@@ -39,13 +39,9 @@ import RegistrationForm from "../ui/RegistrationForm";
  *   The authentication page with login/registration forms.
  */
 function LoginPage() {
-  // State: whether user is on Login (true) or Register (false)
+  
   const [isLogin, setIsLogin] = useState(true);
-
-  // State: error message (shown under form)
   const [error, setError] = useState("");
-
-  // React Router navigation
   const navigate = useNavigate();
 
   /**
@@ -90,14 +86,15 @@ function LoginPage() {
   };
 
   /**
-   * Handle new user registration.
-   *
-   * @param {Object} payload - Registration data.
-   * @param {string} payload.first_name - User's first name.
-   * @param {string} payload.last_name - User's last name.
-   * @param {string} payload.email - User email.
-   * @param {string} payload.password - User password.
+Handle new user registration.
+   
+   * @param {Object} payload 
+   * @param {string} payload.first_name
+   * @param {string} payload.last_name 
+   * @param {string} payload.email
+   * @param {string} payload.password 
    */
+
   const handleRegister = async (payload) => {
     try {
       setError("");
@@ -148,7 +145,7 @@ function LoginPage() {
 
         {/* Toggle login/register */}
         <p className="mt-4 text-center text-sm text-black">
-          {isLogin ? "New in Shero_hub" : "Already have an account?"}
+          {isLogin ? "New in Shero_hub?  " : "Already have an account?"}
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="ml-1 text-black font-semibold hover:underline"

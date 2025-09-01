@@ -103,7 +103,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen p-6 text-red-600">
         {error}{" "}
-        <button className="underline" onClick={() => navigate(-1)}>
+        <button className="underlinehover-" onClick={() => navigate(-1)}>
           Go back
         </button>
       </div>
@@ -113,71 +113,76 @@ export default function ProfilePage() {
     return <div className="min-h-screen p-6">No profile data found.</div>;
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="relative min-h-screen">
+      <img
+        src="/imgs/login.jpg"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover -z-10"
+      />
 
-        {/* Profile card  */}
-        <div className="rounded-2xl shadow bg-white/85 backdrop-blur">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-1">Welcome to your Account, </h1>
-            <p className= "text-2xl font-bold mb-1">{profile.first_name}</p>
-          </div>
+      {/* Profile card  */}
+      <div className="rounded-2xl shadow bg-white/85 backdrop-blur">
+        <div className="p-6">
+          <h1 className="text-2xl font-bold mb-1 text-black">
+            You 're in, {profile.first_name}!
+          </h1>
         </div>
+      </div>
 
-        {/* Attending events */}
-        <div className="rounded-2xl shadow bg-white/85 backdrop-blur">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold"> Attending Events : </h2>
-              <Link
-                to="/"
-                className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                Back
-              </Link>
-            </div>
-
-            {events.length === 0 ? (
-              <div className="rounded-xl border border-dashed p-6 text-gray-700">
-                You have not attended any events yet.
-              </div>
-            ) : (
-              <ul className="grid md:grid-cols-2 gap-6">
-                {events.map((ev) => {
-                  const description =
-                    ev.description || ev.details || "No description.";
-                  return (
-                    <li
-                      key={ev.id}
-                      className="rounded-2xl shadow overflow-hidden bg-white"
-                    >
-                      <Link to={`/events/${ev.id}`} className="block">
-                        <div className="relative h-48 w-full overflow-hidden">
-                          <img
-                            src={imgSrc(ev.image)}
-                            alt={"Image for event: " + ev.title}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                          <div className="absolute bottom-0 left-0 p-4 text-white">
-                            <h3 className="text-lg font-semibold truncate">
-                              {ev.title}
-                            </h3>
-                            <p className="opacity-90 text-sm">{ev.date}</p>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <p className="text-gray-800 line-clamp-3">
-                            {description}
-                          </p>
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+      {/* Attending events */}
+      <div className="rounded-2xl shadow bg-white/85 backdrop-blur">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="mb-6 text-xl  text-black font-semibold">
+              {" "}
+              Your Attending Events :{" "}
+            </h2>
+            <Link
+              to="/"
+             className= " mb-6 px-3 py-2 rounded-lg border-4 border-black text-black hover:bg-white" >Back
+            </Link>
           </div>
+
+          {events.length === 0 ? (
+            <div className="rounded-xl border border-dashed p-6 text-black">
+              You have not attended any events yet.
+            </div>
+          ) : (
+            <ul className="grid md:grid-cols-2 gap-6">
+              {events.map((ev) => {
+                const description =
+                  ev.description || ev.details || "No description.";
+                return (
+                  <li
+                    key={ev.id}
+                    className="rounded-2xl shadow overflow-hidden bg-white"
+                  >
+                    <Link to={`/events/${ev.id}`} className="block">
+                      <div className="relative h-48 w-full overflow-hidden">
+                        <img
+                          src={imgSrc(ev.image)}
+                          alt={"Image for event: " + ev.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 p-4 text-white">
+                          <h3 className="text-lg font-semibold truncate">
+                            {ev.title}
+                          </h3>
+                          <p className="opacity-90 text-sm">{ev.date}</p>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-gray-800 line-clamp-3">
+                          {description}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
     </div>

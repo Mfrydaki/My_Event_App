@@ -49,7 +49,7 @@ export default function HomePage() {
       <section className="relative h-[600px] flex items-center justify-center">
         <img
           src="/imgs/img1.jpg"
-          alt="Hero background"
+          alt=""
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-black/60" />
@@ -63,10 +63,11 @@ export default function HomePage() {
           </p>
           <Link
             to="/events"
-            className="inline-block rounded-2xl bg-indigo-800 px-6 py-3 text-sm font-semibold shadow-lg transition hover:bg-indigo-700"
+            className="inline-block rounded-2xl bg-indigo-900 px-6 py-3 text-sm font-semibold shadow-lg transition hover:bg-indigo-700"
           >
             Explore Events
-          </Link>
+            </Link>
+      
         </div>
       </section>
 
