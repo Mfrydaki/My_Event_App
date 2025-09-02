@@ -1,24 +1,63 @@
-// src/components/Typewriter.jsx
 import { useEffect, useMemo, useState } from "react";
 
 /**
- * Typewriter
- * - Γράφει κείμενο χαρακτήρα–χαρακτήρα.
- * - Δέχεται string ή array από strings (με loop optional).
+ * Typewriter Component
+ *
+ * Purpose
+ * -------
+ * Animate text with a typewriter effect, character by character.
+ *
+ * Behavior
+ * --------
+ * - Accepts a single string or an array of strings.
+ * - If given an array and `loop = true`, it cycles through all phrases
+ *   (typing, pausing, deleting, and moving to the next).
+ * - Shows an optional caret (blinking cursor).
+ *
+ * Props
+ * -----
+ * text : string | string[]
+ *   Text or array of phrases to type.
+ * speed : number
+ *   Typing speed in ms per character (default: 70).
+ * deleteSpeed : number
+ *   Deletion speed in ms per character (default: 40).
+ * pause : number
+ *   Pause duration in ms after finishing a phrase (default: 1200).
+ * loop : boolean
+ *   If true and multiple texts are given, cycles through them (default: false).
+ * caret : boolean
+ *   Whether to show a blinking caret (default: true).
+ * className : string
+ *   Additional Tailwind classes for styling.
+ *
+ * State
+ * -----
+ * i : number
+ *   Current index in the texts array.
+ * out : string
+ *   Current displayed substring.
+ * del : boolean
+ *   Whether the component is currently deleting text.
+ *
+ * Returns
+ * -------
+ * JSX.Element | null
+ *   The animated typewriter text, with optional caret.
  */
 export default function Typewriter({
-  text, // string ή string[]
-  speed = 60, // ms ανά χαρακτήρα (πληκτρολόγηση)
-  deleteSpeed = 40, // ms ανά χαρακτήρα (διαγραφή, αν loop)
-  pause = 1200, // παύση όταν ολοκληρωθεί μια φράση (αν loop)
-  loop = false, // αν true και δώσεις array -> εναλλάσσει φράσεις
-  caret = true, // εμφάνιση του caret
-  className = "", // επιπλέον κλάσεις
+  text,
+  speed = 70,
+  deleteSpeed = 40,
+  pause = 1200,
+  loop = false,
+  caret = true,
+  className = "",
 }) {
   const texts = useMemo(() => (Array.isArray(text) ? text : [text]), [text]);
-  const [i, setI] = useState(0); // index τρέχουσας φράσης
-  const [out, setOut] = useState(""); // εμφανιζόμενο κείμενο
-  const [del, setDel] = useState(false); // αν διαγράφει
+  const [i, setI] = useState(0); // index of current phrase
+  const [out, setOut] = useState(""); // displayed substring
+  const [del, setDel] = useState(false); // deleting mode
 
   useEffect(() => {
     if (!texts.length || typeof texts[i] !== "string") return;
@@ -26,21 +65,21 @@ export default function Typewriter({
     let t;
 
     if (!del && out.length < target.length) {
-      // πληκτρολόγηση
+      // Typing characters
       t = setTimeout(() => setOut(target.slice(0, out.length + 1)), speed);
     } else if (!del && out.length === target.length) {
-      // τέλους φράσης
+      // Finished typing a phrase
       if (loop && texts.length > 1) {
         t = setTimeout(() => setDel(true), pause);
       }
     } else if (del && out.length > 0) {
-      // διαγραφή
+      // Deleting characters
       t = setTimeout(
         () => setOut(target.slice(0, out.length - 1)),
         deleteSpeed
       );
     } else if (del && out.length === 0) {
-      // επόμενη φράση
+      // Move to the next phrase
       setDel(false);
       setI((prev) => (prev + 1) % texts.length);
     }
@@ -48,7 +87,7 @@ export default function Typewriter({
     return () => clearTimeout(t);
   }, [out, del, i, texts, speed, deleteSpeed, pause, loop]);
 
-  // επανεκκίνηση όταν αλλάζει το input text
+  // Reset state when text prop changes
   useEffect(() => {
     setI(0);
     setOut("");

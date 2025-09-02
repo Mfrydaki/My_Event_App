@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 
 /**
  * LoginForm Component
@@ -12,29 +13,29 @@ import { useState } from "react";
  * --------
  * - User enters email and password.
  * - User can toggle password visibility.
- * - On submit, call the onLogin function passed via props.
- * - If fields are empty, show an error message.
+ * - On submit, calls `onLogin({ email, password })`.
+ * - If fields are empty, shows an inline error message.
  *
  * Props
  * -----
  * onLogin : Function
- * Callback function that receives { email, password }.
+ *   Callback that receives { email, password } and performs the login action.
  *
  * State
  * -----
  * email : String
- * User email input.
+ *   User email input.
  * password : String
- * User password input.
+ *   User password input.
  * error : String
- * Error message if form validation fails.
+ *   Error message if form validation fails.
  * showPassword : Boolean
- * Whether the password is visible or hidden.
+ *   Whether the password is visible or hidden.
  *
  * Returns
  * -------
  * JSX.Element
- *  The login form with error handling and password toggle.
+ *   The login form with error handling and password toggle.
  */
 function LoginForm({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -42,6 +43,13 @@ function LoginForm({ onLogin }) {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  /**
+   * Handle form submission:
+   * - Validates inputs
+   * - Calls parent with credentials
+   *
+   * @param {React.FormEvent<HTMLFormElement>} e
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -58,12 +66,15 @@ function LoginForm({ onLogin }) {
     <form
       onSubmit={handleSubmit}
       className="max-w-md mx-auto space-y-4 bg-white p-6 rounded shadow"
+      noValidate
     >
       <h2 className="text-xl font-bold mb-4">Sign in</h2>
 
       {/* Email input */}
       <input
         type="email"
+        name="email"
+        autoComplete="email"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -75,6 +86,8 @@ function LoginForm({ onLogin }) {
       <div className="relative">
         <input
           type={showPassword ? "text" : "password"}
+          name="password"
+          autoComplete="current-password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -85,20 +98,32 @@ function LoginForm({ onLogin }) {
           type="button"
           onClick={() => setShowPassword(!showPassword)}
           className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm text-indigo-600 hover:underline"
+          aria-pressed={showPassword}
+          aria-label={showPassword ? "Hide password" : "Show password"}
         >
           {showPassword ? "Hide" : "Show"}
         </button>
       </div>
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {/* Inline error (announced to screen readers) */}
+      {error && (
+        <p className="text-red-600 text-sm" aria-live="polite">
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"
-        className="inline-block rounded-2xl bg-indigo-400 px-6 py-3 text-sm font-semibold shadow-lg transition hover:bg-indigo-700">
+        className="inline-block rounded-2xl bg-indigo-400 px-6 py-3 text-sm font-semibold shadow-lg transition hover:bg-indigo-700"
+      >
         Connect
       </button>
     </form>
   );
 }
+
+LoginForm.propTypes = {
+  onLogin: PropTypes.func.isRequired,
+};
 
 export default LoginForm;

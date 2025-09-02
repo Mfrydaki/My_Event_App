@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -28,8 +27,8 @@ import RegistrationForm from "../ui/RegistrationForm";
  *
  * State
  * -----
- * isLogin : Bool
- *   If true, show login form; if false, show registration form.
+ * isLogin : Boolean
+ *   If true, shows login form; if false, shows registration form.
  * error : String
  *   Error message to display if login/register fails.
  *
@@ -39,7 +38,6 @@ import RegistrationForm from "../ui/RegistrationForm";
  *   The authentication page with login/registration forms.
  */
 function LoginPage() {
-  
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -86,35 +84,26 @@ function LoginPage() {
   };
 
   /**
-Handle new user registration.
-   
-   * @param {Object} payload 
-   * @param {string} payload.first_name
-   * @param {string} payload.last_name 
-   * @param {string} payload.email
-   * @param {string} payload.password 
+   * Handle new user registration.
+   *
+   * @param {Object} payload - New user data.
+   * @param {string} payload.first_name - User first name.
+   * @param {string} payload.last_name - User last name.
+   * @param {string} payload.email - User email.
+   * @param {string} payload.password - User password.
    */
-
   const handleRegister = async (payload) => {
     try {
       setError("");
-
-      console.log("PAYLOAD:", payload, typeof payload);
-      console.log("JSON →", JSON.stringify(payload));
 
       // POST to backend
       const res = await api.post("/auth/register/", payload, {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("REGISTER OK:", res.data);
-
       // Switch back to login form after success
       setIsLogin(true);
     } catch (err) {
-      console.log("REGISTER ERROR STATUS:", err?.response?.status);
-      console.log("REGISTER ERROR BODY:", err?.response?.data);
-
       // Show error message
       setError(
         err?.response?.data?.error ||
@@ -125,14 +114,13 @@ Handle new user registration.
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center ">
+    <div className="relative min-h-screen flex items-center justify-center">
       <img
         src="/imgs/login.jpg"
         alt="login image"
         className="absolute inset-0 w-full h-full object-cover -z-10"
       />
-      <div className=" text-black relative z-10  backdrop-blur-md p-6 rounded shadow-md w-full max-w-md mx-4">
-
+      <div className="text-black relative z-10 backdrop-blur-md p-6 rounded shadow-md w-full max-w-md mx-4">
         {/* Show login or registration form */}
         {isLogin ? (
           <LoginForm onLogin={handleLogin} />

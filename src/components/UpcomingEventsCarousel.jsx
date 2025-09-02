@@ -1,10 +1,44 @@
-// src/components/UpcomingEventsCarousel.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
+/**
+ * UpcomingEventsCarousel Component
+ *
+ * Purpose
+ * -------
+ * Display a slideshow of upcoming events with optional autoplay and navigation controls.
+ *
+ * Behavior
+ * --------
+ * - Shows one event card at a time, full width.
+ * - Supports autoplay with configurable interval (default: 5000ms).
+ * - Pauses autoplay on hover.
+ * - Allows manual navigation with arrows and indicator dots.
+ * - Each slide links to the corresponding event details page.
+ *
+ * Props
+ * -----
+ * events : Array
+ *   List of event objects with { id/_id, title, date, image }.
+ * intervalMs : Number
+ *   Autoplay interval in ms (default: 5000).
+ * auto : Boolean
+ *   If true, autoplay is enabled.
+ * className : String
+ *   Extra CSS classes for the container.
+ * slideHeight : String
+ *   Tailwind height classes for slides (default: "h-[260px] md:h-[360px]").
+ *
+ * Returns
+ * -------
+ * JSX.Element
+ *   The carousel container with slides, controls, and navigation dots.
+ */
 
 function isAbsoluteUrl(v) {
   return typeof v === "string" && /^https?:\/\//i.test(v);
 }
+
 function imgSrc(image) {
   return !image
     ? "/imgs/default.jpg"
@@ -28,14 +62,12 @@ export default function UpcomingEventsCarousel({
   const prev = () =>
     events.length && setIdx((i) => (i - 1 + events.length) % events.length);
 
+  // Autoplay effect: advance every interval unless paused
   useEffect(() => {
     if (!auto || hovered || !hasMany) return;
     const id = setInterval(next, intervalMs);
     return () => clearInterval(id);
   }, [auto, hovered, intervalMs, hasMany, events.length]);
-
-  // 🔎 βοήθεια στο debug
-  console.log("[Carousel] events:", events.length, "idx:", idx);
 
   return (
     <div
@@ -44,7 +76,7 @@ export default function UpcomingEventsCarousel({
       onMouseLeave={() => setHovered(false)}
       aria-label="Upcoming events carousel"
     >
-      {/* Αν δεν υπάρχουν events, δείξε placeholder αντί να κρύβεσαι */}
+      {/* If no events, show placeholder */}
       {events.length === 0 ? (
         <div className="h-64 grid place-items-center text-gray-300">
           No events for the slideshow.
@@ -62,15 +94,13 @@ export default function UpcomingEventsCarousel({
                 <Link
                   key={id}
                   to={`/events/${ev.id || ev._id}`}
-                  className="w-full shrink-0 relative h-[260px] md:h-[360px]"
+                  className={`w-full shrink-0 relative ${slideHeight}`}
                 >
                   <img
                     src={imgSrc(ev.image)}
                     alt={`Image for event: ${ev.title || "Event"}`}
                     className="h-full w-full object-contain bg-black rounded-xl"
                     loading="lazy"
-                    imageFit= "contain"
-                    imagePosition ="center"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-4">
@@ -86,7 +116,7 @@ export default function UpcomingEventsCarousel({
             })}
           </div>
 
-          {/* Controls + dots */}
+          {/* Controls + indicator dots */}
           {hasMany && (
             <>
               <button
@@ -118,9 +148,6 @@ export default function UpcomingEventsCarousel({
           )}
         </>
       )}
-
-      {/* 🔴 Ορατό περίγραμμα για να δεις ότι υπάρχει (βγάλ' το μετά) */}
-      <div className="pointer-events-none absolute inset-0 ring-2 ring-fuchsia-500/50" />
     </div>
   );
 }

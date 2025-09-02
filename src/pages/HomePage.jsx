@@ -5,9 +5,26 @@ import UpcomingEventsCarousel from "../components/UpcomingEventsCarousel";
 import Typewriter from "../components/TypeWriter";
 
 /**
- * HomePage
- * - Hero + intro + gallery
- * - Events grid (από backend) + slideshow από κάτω
+ * HomePage Component
+ *
+ * Purpose
+ * -------
+ * Landing page with multiple sections:
+ * - Hero (cover image + welcome text + CTA button)
+ * - Intro text with typewriter effect
+ * - Gallery of static images
+ * - Upcoming Events carousel (fetched from backend)
+ *
+ * Behavior
+ * --------
+ * - On mount, fetches events via GET /events/ with cache-busting param.
+ * - Auto-refreshes events every 30 seconds.
+ * - Shows loading, error, and empty states for the events section.
+ *
+ * Returns
+ * -------
+ * JSX.Element
+ *   The homepage with hero, intro, gallery, and events carousel.
  */
 export default function HomePage() {
   const [events, setEvents] = useState([]);
@@ -16,9 +33,13 @@ export default function HomePage() {
 
   const isAbsoluteUrl = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
   const imgSrc = (image) =>
-    !image ? "/imgs/default.jpg" : isAbsoluteUrl(image) ? image : `/imgs/${image}`;
+    !image
+      ? "/imgs/default.jpg"
+      : isAbsoluteUrl(image)
+      ? image
+      : `/imgs/${image}`;
 
-  // Fetch events (mount + κάθε 30")
+  // Fetch events on mount + every 30 seconds
   useEffect(() => {
     let mounted = true;
 
@@ -66,12 +87,11 @@ export default function HomePage() {
             className="inline-block rounded-2xl bg-indigo-900 px-6 py-3 text-sm font-semibold shadow-lg transition hover:bg-indigo-700"
           >
             Explore Events
-            </Link>
-      
+          </Link>
         </div>
       </section>
 
-      {/* Section 2: Intro (typewriter) */}
+      {/* Section 2: Intro (typewriter effect) */}
       <section className="px-6 py-10">
         <p className="text-justify text-white m-6 max-w-[70ch] mx-auto leading-relaxed">
           <Typewriter
@@ -100,23 +120,28 @@ export default function HomePage() {
         <img
           src="/imgs/backslide.jpg"
           alt="background-photo"
-          className="absolute inset-0 w-full h-full object-cover -z-10" />
+          className="absolute inset-0 w-full h-full object-cover -z-10"
+        />
+        <div className="absolute inset-0 bg-black/50 -z-10" />
 
-          <div className="absolute inset-0 bg-black/50 -z-10"/>
+        <h2 className="text-2xl font-bold text-center mb-10 text-white">
+          Upcoming Events
+        </h2>
 
-          <h2 className="text-2xl font-bold text-center mb-10 text-white">Upcoming Events</h2>
-
-        {loading && <p className="text-center text-gray-300">Loading events…</p>}
-        {error && !loading && <p className="text-center text-red-200">{error}</p>}
+        {loading && (
+          <p className="text-center text-gray-300">Loading events…</p>
+        )}
+        {error && !loading && (
+          <p className="text-center text-red-200">{error}</p>
+        )}
         {!loading && !error && events.length === 0 && (
           <p className="text-center text-gray-300">No events yet.</p>
         )}
 
         {!loading && !error && events.length > 0 && (
           <>
-
             {/* Slideshow */}
-            <div className=" m-12">
+            <div className="m-12">
               <UpcomingEventsCarousel events={events} intervalMs={5000} auto />
             </div>
           </>

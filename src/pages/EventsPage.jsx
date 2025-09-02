@@ -1,50 +1,62 @@
-// src/pages/EventsPage.jsx
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
 
 /**
- * EventsPage
- * ----------
- * List all events fetched from the backend.
+ * EventsPage Component
+ *
+ * Purpose
+ * -------
+ * Render a list of events as clickable cards that link to each event's details page.
  *
  * Behavior
  * --------
- * - On mount, performs GET /events/ (with a small cache-busting param).
- * - Handles loading, error, and empty states.
- * - Renders event cards with thumbnail, title, optional description/date.
- * - Each card links to /events/:id (id | _id | _id.$oid supported).
+ * - On mount, fetches events via GET /events/ and stores them in local state.
+ * - Each card shows the event's image, title, formatted date, and attendees_count.
+ * - Handles loading and error states gracefully.
  *
- * State
- * -----
- * events : Array<object>
- * loading : boolean
- * error : string
+ * Data Contract
+ * -------------
+ * Backend returns an array of events with:
+ * { id, title, date, image, attendees_count }.
+ *
+ * Image Handling
+ * --------------
+ * `image` may be:
+ * - Base64 data URL ("data:image/png;base64,...")
+ * - Full http(s) URL
+ * - Absolute path ("/imgs/...") or a simple filename ("event1.jpg")
+ * Use `resolveImageSrc()` so all cases work consistently.
  *
  * Returns
  * -------
  * JSX.Element
- *   The events listing page.
+ *   A full-page background with a vertical list of event cards.
  */
 
-/** Resolve a stable id from common SQL/Mongo shapes. */
-function getEventId(ev) {
-  return ev?.id || ev?._id?.$oid || ev?._id || null;
-}
+const resolveImageSrc = (img) => {
+  if (!img) return "/imgs/placeholder.jpg";
+  const s = String(img);
+  if (s.startsWith("data:")) return s; // Base64 data URL
+  if (s.startsWith("http")) return s; // external URL
+  if (s.startsWith("/")) return s; // absolute path in public
+  return `/imgs/${s}`; // simple filename -> public/imgs/
+};
 
-/** Is value an absolute http(s) URL? */
-function isAbsoluteUrl(v) {
-  return typeof v === "string" && /^https?:\/\//i.test(v);
-}
-
-/** Normalize image src (default | absolute | /imgs/<file>). */
-function imgSrc(image) {
-  return !image
-    ? "/imgs/default.jpg"
-    : isAbsoluteUrl(image)
-    ? image
-    : `/imgs/${image}`;
-}
+const formatEventDate = (s) => {
+  if (!s) return "—";
+  const norm = String(s).trim().replace(/[\/.]/g, "-"); // 2026/10/10 -> 2026-10-10
+  const parts = norm.split("-");
+  if (parts.length !== 3) return s;
+  const [y, m, d] = parts.map(Number);
+  if (!y || !m || !d) return s;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 export default function EventsPage() {
   const [events, setEvents] = useState([]);
@@ -52,118 +64,98 @@ export default function EventsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    /**
-     * loadEvents
-     * ----------
-     * GET /events/?_={cache_bust}
-     * Accept arrays or wrapped payloads: {results:[...]}, {data:[...]}.
-     */
-    const loadEvents = async () => {
+    let mounted = true;
+
+    async function load() {
       try {
         setError("");
-        const res = await api.get("/events/", { params: { _: Date.now() } });
-        const raw = res.data;
-        const list = Array.isArray(raw)
-          ? raw
-          : Array.isArray(raw?.results)
-          ? raw.results
-          : Array.isArray(raw?.data)
-          ? raw.data
-          : [];
-        setEvents(list);
+        const res = await api.get("/events/");
+        if (!mounted) return;
+        setEvents(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
+        console.error(
+          "GET /events/ error:",
+          err?.response?.status,
+          err?.response?.data
+        );
         setError(
           err?.response?.data?.error ||
             err?.response?.data?.detail ||
-            err?.message ||
-            "Failed to load events."
+            "Failed to fetch events."
         );
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
-    };
+    }
 
-    loadEvents();
+    load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Render states
-  if (loading) return <p className="p-6 text-center">Loading events…</p>;
-  if (error) return <p className="p-6 text-center text-red-600">{error}</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center text-white/80">
+        Loading events…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <p className="text-red-300">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <section className="relative min-h-screen">
-      {/* Background image */}
-      <img
-        src="/imgs/events.jpg"
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      {/* Optional dark overlay for contrast */}
-      <div className="absolute inset-0 bg-black/55" />
+    <div
+      className="relative min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: "url('/imgs/events.jpg')" }}
+    >
+      <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mx-auto max-w-3xl space-y-4">
+          {events.length === 0 && (
+            <p className="text-white/70">No events yet.</p>
+          )}
 
-      {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto p-6 text-white">
-        <h2 className="text-2xl font-bold mb-4">Events:</h2>
+          {events.map((ev) => (
+            <Link
+              key={ev.id}
+              to={`/events/${ev.id}`}
+              // ίδια κάρτα με gradient + border
+              className="block rounded-2xl bg-gradient-to-br from-purple-900/50 to-indigo-900/30 border border-white/40 p-4 hover:bg-white/10 transition"
+            >
+              <div className="flex items-center gap-4">
+                <img
+                  src={resolveImageSrc(ev.image)} // ✅ image handling
+                  alt={`Image for ${ev.title}`}
+                  className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.src = "/imgs/placeholder.jpg";
+                  }}
+                />
 
-        {events.length === 0 ? (
-          <p>No events found.</p>
-        ) : (
-          <ul className="space-y-4">
-            {events.map((ev, i) => {
-              const id = getEventId(ev);
-              const linkId = id ? encodeURIComponent(String(id)) : "";
-              const dateStr =
-                ev?.date &&
-                new Date(ev.date).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                });
-
-              return (
-                <li
-                  key={id || i}
-                  className="rounded-xl border border-white/10 bg-white/5 overflow-hidden"
-                >
-                  <Link
-                    to={id ? `/events/${linkId}` : "#"}
-                    className="flex gap-4 p-4 hover:bg-white/10 transition"
-                  >
-                    {/* Thumbnail */}
-                    <div className="w-32 h-20 shrink-0 rounded-md overflow-hidden bg-black/20">
-                      <img
-                        src={imgSrc(ev?.image)}
-                        alt={
-                          ev?.title ? `Image for ${ev.title}` : "Event image"
-                        }
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-
-                    {/* Texts */}
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-semibold truncate">
-                        {ev?.title || "Event"}
-                      </h3>
-
-                      {ev?.description && (
-                        <p className="text-gray-300 text-sm mt-1 line-clamp-2">
-                          {ev.description}
-                        </p>
-                      )}
-
-                      {dateStr && (
-                        <p className="text-xs text-gray-300 mt-2">{dateStr}</p>
-                      )}
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-semibold truncate">
+                    {ev.title || "Untitled"}
+                  </h3>
+                  <p className="text-sm text-white/80">
+                    {formatEventDate(ev.date)} {/* ✅ date formatting */}
+                  </p>
+                  {typeof ev.attendees_count === "number" && (
+                    <p className="text-xs text-white/70 mt-1">
+                      {ev.attendees_count} attending
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -6,14 +6,15 @@ import axios from "axios";
  *
  * Purpose
  * -------
- * Show a list of events that the current user has attended.
+ * Display a list of events that the current user has attended.
  *
  * Behavior
  * --------
  * - On mount (useEffect), fetches attended events from the backend.
  *   Example endpoint: GET /api/users/me/events/attending
  * - Requires a valid JWT token (stored in localStorage).
- * - Displays event cards with title, date, description, image, etc.
+ * - Shows loading, error, or empty states accordingly.
+ * - Renders attended events as cards with image, title, date, and description.
  *
  * State
  * -----
@@ -27,7 +28,7 @@ import axios from "axios";
  * Returns
  * -------
  * JSX.Element
- *   The list of attended events or loading/error messages.
+ *   The list of attended events or a message if none are found.
  */
 export default function MyEventsPage() {
   const [events, setEvents] = useState([]);
@@ -39,6 +40,11 @@ export default function MyEventsPage() {
      * fetchAttendedEvents
      *
      * Fetch all events the current user has attended.
+     *
+     * Side effects
+     * ------------
+     * - Sends GET request to backend with Authorization header.
+     * - Updates `events`, `loading`, and `error` state.
      */
     async function fetchAttendedEvents() {
       try {
@@ -79,13 +85,16 @@ export default function MyEventsPage() {
               key={event.id}
               className="rounded-2xl shadow-md overflow-hidden bg-white"
             >
+              {/* Event image */}
               <div className="relative h-64 w-full overflow-hidden">
                 <img
                   src={event.image}
-                  alt={"Image for event: " + event.title}
+                  alt={`Image for event: ${event.title}`}
                   className="w-full h-full object-cover"
                 />
               </div>
+
+              {/* Event info */}
               <div className="p-4">
                 <h3 className="text-lg font-semibold mb-1">{event.title}</h3>
                 <p className="text-sm text-gray-600">{event.date}</p>

@@ -1,34 +1,44 @@
-// src/pages/EventDetailsPage.jsx
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 /**
- * EventDetailsPage
- * ----------------
- * Fetch and display a single event, with "Attend / Unattend" actions.
+ * EventDetailsPage Component
  *
- * Data flow
+ * Purpose
+ * -------
+ * Display a single event with rich details and allow the user to
+ * toggle attendance (Attend / Unattend).
+ *
+ * Behavior
+ * --------
+ * - On mount and when `id` changes:
+ *   - Fetches the event via GET /events/:id/?_={cache_bust}.
+ *   - Determines if the current user is attending (from response or JWT).
+ * - Provides actions to:
+ *   - POST /events/:id/attend/
+ *   - POST /events/:id/unattend/
+ * - Handles loading, error, and not-found states with user feedback.
+ *
+ * Data Flow
  * ---------
- * - GET /events/:id/ to load a single event (uses cache-busting query param).
- * - POST /events/:id/attend/ to attend.
- * - POST /events/:id/unattend/ to unattend.
+ * - Reads JWT from localStorage ("token") when performing protected actions.
+ * - Re-fetches the event after attend/unattend to keep UI in sync.
  *
- * UI behavior
- * -----------
- * - Shows a full-bleed background image behind a content card.
- * - Displays event cover, title, date, description/details.
- * - Shows attendees count and an action button (Attend or Unattend).
- * - Handles loading, error, and not-found states.
+ * UI
+ * --
+ * - Full-bleed background with a centered card layout.
+ * - Cover image (16:9), title, date, description/details.
+ * - Attend/Unattend button, attendees counter, and Back link.
  *
  * Routing
  * -------
- * - Expects a route param :id (Mongo/ObjectId string or numeric id).
+ * - Expects a route param `:id` (Mongo ObjectId string or numeric id).
  *
  * Returns
  * -------
  * JSX.Element
- *   The event details page with actions.
+ *   The event details page with actions and status handling.
  */
 
 /**

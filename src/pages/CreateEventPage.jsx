@@ -1,4 +1,3 @@
-// src/pages/CreateEventPage.jsx
 import React, { useState } from "react";
 import api from "../services/api";
 import EventForm from "../ui/EventForm";
@@ -9,13 +8,30 @@ import { useNavigate } from "react-router-dom";
  *
  * Purpose
  * -------
- * Display a form for creating a new event and submit it to the backend.
+ * Provide a page for authenticated users to create a new event.
  *
  * Behavior
  * --------
- * - Renders EventForm inside a centered card.
- * - Full-page background image.
- * - On success, redirects to /events.
+ * - Renders an EventForm for user input (title, description, date, image).
+ * - On submit:
+ *   - Builds a payload matching backend requirements.
+ *   - Sends a POST request to /events/ with JWT authentication if available.
+ *   - On success, navigates to the events listing page ("/events").
+ * - Displays an error message if the request fails.
+ *
+ * State
+ * -----
+ * error : String
+ *   Error message to display when event creation fails.
+ *
+ * Parameters
+ * ----------
+ * None
+ *
+ * Returns
+ * -------
+ * JSX.Element
+ *   A full-page background section with a centered form card.
  */
 export default function CreateEventPage() {
   const [error, setError] = useState("");
@@ -26,20 +42,25 @@ export default function CreateEventPage() {
     description,
     details,
     date,
-    imageFile,
+    imageDataUrl,
   }) => {
     try {
       setError("");
 
-      const formData = new FormData();
-      formData.append("title", title || "");
-      formData.append("description", description || "");
-      formData.append("details", details || "");
-      formData.append("date", date || ""); // date in ISO (from EventForm)
-      if (imageFile) formData.append("image", imageFile);
+      const payload = {
+        title: title || "",
+        description: description || "",
+        date: date || "",
+        image: imageDataUrl || "", // backend expects 'image' string
+        // details: backend does not store this field
+      };
 
-      await api.post("/events/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const token = localStorage.getItem("token");
+      await api.post("/events/", payload, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
 
       navigate("/events");
@@ -60,10 +81,8 @@ export default function CreateEventPage() {
   return (
     <div
       className="relative min-h-screen flex items-center justify-center bg-cover bg-center"
-      style={{ backgroundImage: "url('/imgs/z.jpg')" }} // ✅ βάλε την εικόνα στο public/imgs/z.jpg
+      style={{ backgroundImage: "url('/imgs/z.jpg')" }}
     >
-    
-      {/* Card ΜΠΡΟΣΤΑ από το overlay */}
       <div className="relative z-10 w-full max-w-xl bg-black/60 backdrop-blur-sm p-6 rounded-2xl">
         <h1 className="text-2xl font-bold mb-4 text-white">Submit Event</h1>
         <EventForm onSubmit={handleCreate} />

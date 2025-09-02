@@ -8,8 +8,26 @@ import ProfilePage from "./pages/ProfilePage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-
-export default function App(){
+/**
+ * App Component
+ *
+ * Purpose
+ * -------
+ * Define the root router and layout of the application.
+ *
+ * Behavior
+ * --------
+ * - Wraps the app in a React Router <Router>.
+ * - Defines all routes.
+ * - Displays Navbar at the top and Footer at the bottom.
+ * - Uses flexbox so <main> grows to fill the viewport height.
+ *
+ * Returns
+ * -------
+ * JSX.Element
+ *   The application root with routing and layout.
+ */
+export default function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
@@ -23,9 +41,9 @@ export default function App(){
             <Route path="/create" element={<CreateEventPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Routes>
-          /</main>          
-          <Footer/>
-        </div>
-      </Router>
+        </main>
+        <Footer />
+      </div>
+    </Router>
   );
 }

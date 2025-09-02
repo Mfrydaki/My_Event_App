@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 /**
- * ProfilePage
+ * ProfilePage Component
  *
  * Purpose
  * -------
@@ -11,14 +11,29 @@ import api from "../services/api";
  *
  * Behavior
  * --------
- * - Parallel fetch:
- *   GET /auth/profile/ → user details (requires JWT)
- *   GET /api/users/me/events/attending → attending events list (requires JWT)
- * - Redirects to /login if unauthorized or if missing token.
+ * - On mount:
+ *   - If there's no JWT in localStorage, redirects to /login.
+ *   - Otherwise performs a parallel fetch for:
+ *     - GET /auth/profile/ → user details
+ *     - GET /api/users/me/events/attending → list of attending events
+ * - Handles loading, error and empty states.
+ * - Redirects to /login on 401/403 with a `from` state.
+ *
+ * Image Handling
+ * --------------
+ * - Resolves images that may be:
+ *   - Absolute URLs
+ *   - Django media paths (/media/..., media/...)
+ *   - Local filenames under /imgs/
+ *
+ * Returns
+ * -------
+ * JSX.Element
+ *   The profile page with the user's info and their attending events.
  */
 
 const isAbsoluteUrl = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
-const API_BASE = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, ""); 
+const API_BASE = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
 const buildImageUrl = (image) => {
   if (!image) return "/imgs/default.jpg";
   if (isAbsoluteUrl(image)) return image;
@@ -56,11 +71,10 @@ export default function ProfilePage() {
   useEffect(() => {
     let mounted = true;
 
-
-    // If not token go to login
+    // If no token, go to login
     const token = localStorage.getItem("token");
     if (!token) {
-      navigate("/login", { state: { from: "/myprofile" } });
+      navigate("/login", { state: { from: "/profile" } });
       return;
     }
 
@@ -69,12 +83,11 @@ export default function ProfilePage() {
         setError("");
         setLoading(true);
 
+        // Parallel fetch: profile + attending events
         const [meRes, attendingRes] = await Promise.all([
           api.get("/auth/profile/"),
           api.get("/api/users/me/events/attending"),
         ]);
-
-    
 
         if (!mounted) return;
         setProfile(meRes.data?.user || meRes.data || null);
@@ -82,7 +95,6 @@ export default function ProfilePage() {
       } catch (e) {
         const status = e?.response?.status;
         if (status === 401 || status === 403) {
-          
           navigate("/login", { state: { from: "/profile" } });
           return;
         }
@@ -103,7 +115,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen p-6 text-red-600">
         {error}{" "}
-        <button className="underlinehover-" onClick={() => navigate(-1)}>
+        <button className="underline" onClick={() => navigate(-1)}>
           Go back
         </button>
       </div>
@@ -120,26 +132,25 @@ export default function ProfilePage() {
         className="absolute inset-0 w-full h-full object-cover -z-10"
       />
 
-      {/* Profile card  */}
-      <div className="rounded-2xl shadow bg-white/85 backdrop-blur">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold mb-1 text-black">
-            You 're in, {profile.first_name}!
-          </h1>
-        </div>
+      {/* Profile header */}
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-1 text-black">
+          You're in, {profile.first_name}!
+        </h1>
       </div>
 
       {/* Attending events */}
-      <div className="rounded-2xl shadow bg-white/85 backdrop-blur">
+      <div className="rounded-2xl shadow bg-white/85">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="mb-6 text-xl  text-black font-semibold">
-              {" "}
-              Your Attending Events :{" "}
+            <h2 className="mb-2 text-2xl text-black font-semibold">
+              Your Attending Events:
             </h2>
             <Link
               to="/"
-             className= " mb-6 px-3 py-2 rounded-lg border-4 border-black text-black hover:bg-white" >Back
+              className="mb-6 px-3 py-2 rounded-lg border-4 border-black text-black hover:bg-white"
+            >
+              Back
             </Link>
           </div>
 
@@ -161,7 +172,7 @@ export default function ProfilePage() {
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
                           src={imgSrc(ev.image)}
-                          alt={"Image for event: " + ev.title}
+                          alt={`Image for event: ${ev.title}`}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
@@ -169,7 +180,9 @@ export default function ProfilePage() {
                           <h3 className="text-lg font-semibold truncate">
                             {ev.title}
                           </h3>
-                          <p className="opacity-90 text-sm">{ev.date}</p>
+                          <p className="opacity-90 text-sm">
+                            {prettyDate(ev.date)}
+                          </p>
                         </div>
                       </div>
                       <div className="p-4">

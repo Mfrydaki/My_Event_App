@@ -1,104 +1,120 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 /**
  * EventForm Component
  *
  * Purpose
  * -------
- * A polished, reusable form for creating or editing events.
+ * Reusable form for creating an event.
  *
  * Behavior
  * --------
- * - Collects input fields: title, description, details, date (text), image file.
- * - Displays a live preview for the uploaded image.
- * - On submit, calls onSubmit(payload) with normalized data.
+ * - Collects: title, description, details, date (YYYY-MM-DD), and an image file.
+ * - Shows a live preview for the selected image (Object URL).
+ * - On submit:
+ *   - Validates and normalizes the date to YYYY-MM-DD.
+ *   - Converts the selected image file to a Base64 data URL (if provided) with a small size check.
+ *   - Calls onSubmit({ title, description, details, date, imageDataUrl }).
  *
  * Props
  * -----
  * onSubmit : Function
- *   Callback invoked with event data:
- *   { title, description, details, date (ISO string or null), imageFile }
+ *   Callback invoked with the normalized payload.
  *
  * Returns
  * -------
  * JSX.Element
- *   A glass-style card on top of a full-bleed background image.
+ *   A glass-style card form over a full-bleed background image.
  */
 export default function EventForm({ onSubmit }) {
+  // Controlled inputs
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [details, setDetails] = useState("");
-  const [date, setDate] = useState(""); // "YYYY-MM-DD"
+  const [date, setDate] = useState(""); // Expected format: "YYYY-MM-DD"
+
+  // File + preview state (keeps UI unchanged)
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState("");
 
-  
-  /**
-   * handleFile
-   *
-   * Read the chosen file and show a preview.
-   *
-   * Parameters
-   * ----------
-   * e : React.ChangeEvent<HTMLInputElement>
-   */
-  const handleFile = (e) => {
+  // Handle file selection and generate an Object URL for preview
+  function handleFile(e) {
     const file = e.target.files?.[0] || null;
     setImageFile(file);
-    if (preview) URL.revokeObjectURL(preview);
     setPreview(file ? URL.createObjectURL(file) : "");
-  };
+  }
 
-  /**
-   * handleSubmit
-   *
-   * Build the payload and forward it to the parent.
-   *
-   * Parameters
-   * ----------
-   * e : React.FormEvent<HTMLFormElement>
-   */
+  // Clean up preview Object URL on unmount or when preview changes
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  // Read a File as Base64 data URL
+  const fileToDataURL = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result); // e.g. "data:image/png;base64,...."
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  // Submit handler: validate inputs, serialize image, and forward payload
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
+    // Normalize date: allow "YYYY/MM/DD" or "YYYY.MM.DD" → "YYYY-MM-DD"
+    const normalizedDate = (date || "").trim().replace(/[\/.]/g, "-");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedDate)) {
+      alert("Please use date format YYYY-MM-DD");
+      return;
+    }
+
+    // Optional image: convert to Base64 data URL
+    let imageDataUrl = "";
+    if (imageFile) {
+      imageDataUrl = await fileToDataURL(imageFile);
+
+      // Optional guard to avoid very large JSON payloads (~2MB string)
+      if (imageDataUrl.length > 2_000_000) {
+        alert("Image is too large. Choose a smaller file.");
+        return;
+      }
+    }
+
+    // Call parent with normalized payload
+    onSubmit({
       title: title.trim(),
       description: description.trim(),
-      details: details.trim(),
-      // Convert "YYYY-MM-DD" (no calendar) to ISO for the backend
-      date: date ? new Date(date).toISOString() : null,
-      imageFile,
-    };
-
-    await onSubmit?.(payload);
+      details: details.trim(), // backend may ignore this; safe to send
+      date: normalizedDate,
+      imageDataUrl, // parent will send this as 'image' to the backend
+    });
   };
 
   return (
     <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
       {/* Full-bleed background image */}
       <img
-        src="/imgs/z.jpg" // βεβαιώσου ότι υπάρχει στο public/imgs/z.jpg
+        src="/imgs/z.jpg"
         alt=""
         className="pointer-events-none select-none absolute inset-0 h-full w-full object-cover"
       />
-      {/* Soft dark overlay so the form pops */}
       <div className="absolute inset-0 bg-black/50" />
 
-      {/* Glass card */}
+      {/* Glass card form */}
       <form
         onSubmit={handleSubmit}
         className="relative z-10 w-full max-w-xl rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md shadow-2xl p-6"
       >
-    
         <div className="space-y-5">
           {/* Title */}
           <label className="block">
             <span className="mb-1 block text-sm font-medium uppercase tracking-wide text-white/80">
               Title :
-              
             </span>
             <input
-              
               className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-white placeholder-white/60
                          focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
               placeholder=""
@@ -138,14 +154,13 @@ export default function EventForm({ onSubmit }) {
             />
           </label>
 
-          {/* Date (text, no native calendar) */}
+          {/* Date */}
           <label className="block">
             <span className="mb-1 block text-sm font-medium uppercase tracking-wide text-white/80">
               Date (YYYY-MM-DD) :
             </span>
             <input
-              type="text" // no calendar
-              lang="en"
+              type="text"
               inputMode="numeric"
               pattern="\d{4}-\d{2}-\d{2}"
               className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-white placeholder-white/60
@@ -155,7 +170,6 @@ export default function EventForm({ onSubmit }) {
               onChange={(e) => setDate(e.target.value)}
               required
             />
-            
           </label>
 
           {/* Image uploader + preview */}
@@ -192,7 +206,7 @@ export default function EventForm({ onSubmit }) {
               type="submit"
               className="inline-block rounded-2xl bg-indigo-700 px-6 py-3 text-sm font-semibold shadow-lg transition text-white hover:bg-indigo-600"
             >
-              Create the Event 
+              Create the Event
             </button>
           </div>
         </div>
